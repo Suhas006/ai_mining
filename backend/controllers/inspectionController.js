@@ -39,10 +39,7 @@ async function submitInspection(req, res) {
     // Handle mock anomaly ID from frontend
     let finalAnomalyId = anomalyId;
     if (!mongoose.Types.ObjectId.isValid(finalAnomalyId)) {
-      const existingAnomaly = await SurveillanceAnomaly.findOne();
-      if (existingAnomaly) {
-        finalAnomalyId = existingAnomaly._id;
-      }
+      finalAnomalyId = new mongoose.Types.ObjectId();
     }
 
     // 3. Create inspection record
@@ -85,6 +82,9 @@ async function submitInspection(req, res) {
 
   } catch (err) {
     console.error('Submit Inspection Error:', err);
+    if (err.name === 'ValidationError' || err.name === 'CastError') {
+      return res.status(400).json({ error: err.message });
+    }
     res.status(500).json({ error: 'Failed to process field inspection.' });
   }
 }

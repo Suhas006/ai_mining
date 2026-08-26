@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const fieldInspectionSchema = new mongoose.Schema({
   anomalyId: { type: mongoose.Schema.Types.ObjectId, ref: 'SurveillanceAnomaly', required: true },
-  inspectorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  inspectorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   clientUuid: { type: String, required: true, unique: true, index: true },
   groundCoordinates: {
     type: {
