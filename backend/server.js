@@ -28,6 +28,15 @@ mongoose.connect(MONGODB_URI)
   .then(() => console.log('✅ GeoSuraksha MongoDB connected successfully:', MONGODB_URI))
   .catch(err => console.error('⚠️ MongoDB Connection Notice (Server will use local/memory fallback):', err.message));
 
+// Base route to check if API is live
+app.get('/', (req, res) => {
+  res.status(200).json({ 
+    status: "Online", 
+    system: "GeoSuraksha API Server",
+    version: "1.0.0" 
+  });
+});
+
 // Health Check
 app.get('/health', (req, res) => {
   res.json({
