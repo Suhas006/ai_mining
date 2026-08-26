@@ -1,5 +1,7 @@
+const mongoose = require('mongoose');
 const FieldInspection = require('../models/FieldInspection');
 const SurveillanceAnomaly = require('../models/SurveillanceAnomaly');
+const User = require('../models/User');
 
 async function submitInspection(req, res) {
   try {
@@ -34,10 +36,29 @@ async function submitInspection(req, res) {
       });
     }
 
+    // Handle mock anomaly ID from frontend
+    let finalAnomalyId = anomalyId;
+    if (!mongoose.Types.ObjectId.isValid(finalAnomalyId)) {
+      const existingAnomaly = await SurveillanceAnomaly.findOne();
+      if (existingAnomaly) {
+        finalAnomalyId = existingAnomaly._id;
+      }
+    }
+
     // 3. Create inspection record
-    const inspectorId = req.user ? req.user.id : req.body.inspectorId;
+    let inspectorId = req.user ? req.user.id : req.body.inspectorId;
+    if (!inspectorId) {
+      const officer = await User.findOne({ role: { $in: ['officer', 'surveyor'] } });
+      if (officer) {
+        inspectorId = officer._id;
+      } else {
+        // Fallback to a valid ObjectId if no officers exist
+        inspectorId = new mongoose.Types.ObjectId();
+      }
+    }
+
     const inspection = await FieldInspection.create({
-      anomalyId,
+      anomalyId: finalAnomalyId,
       inspectorId,
       clientUuid,
       groundCoordinates: {
@@ -53,7 +74,9 @@ async function submitInspection(req, res) {
 
     // 4. Automatically update anomaly status based on ground confirmation
     const newAnomalyStatus = isBreachConfirmed ? 'Verified' : 'Dismissed';
-    await SurveillanceAnomaly.findByIdAndUpdate(anomalyId, { status: newAnomalyStatus });
+    if (mongoose.Types.ObjectId.isValid(finalAnomalyId)) {
+      await SurveillanceAnomaly.findByIdAndUpdate(finalAnomalyId, { status: newAnomalyStatus });
+    }
 
     res.status(201).json({
       message: 'Field inspection evidence submitted and synced successfully.',

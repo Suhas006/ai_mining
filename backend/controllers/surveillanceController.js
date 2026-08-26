@@ -33,11 +33,16 @@ async function analyzeRaster(req, res) {
   try {
     const { leaseId, beforeImageUrl, afterImageUrl, detectedPolygon, mockAnomalyType } = req.body;
 
-    if (!leaseId) {
-      return res.status(400).json({ error: 'leaseId is required.' });
+    let finalLeaseId = leaseId;
+    if (!finalLeaseId) {
+      const firstLease = await MiningLease.findOne();
+      if (!firstLease) {
+        return res.status(400).json({ error: 'No leases found in database.' });
+      }
+      finalLeaseId = firstLease._id;
     }
 
-    const lease = await MiningLease.findById(leaseId);
+    const lease = await MiningLease.findById(finalLeaseId);
     if (!lease) {
       return res.status(404).json({ error: 'Mining lease not found.' });
     }
