@@ -32,27 +32,27 @@ async function seedDatabase() {
     const officerHash = await bcrypt.hash('officer123', 10);
 
     const adminUser = await User.create({
-      name: 'Dr. S. K. Murugan (District Collector)',
-      email: 'admin@geosuraksha.tn.gov.in',
+      fullName: 'Dr. S. K. Murugan (District Collector)',
+      officialEmail: 'admin@geosuraksha.tn.gov.in',
+      employeeId: 'TN-MIN-2026-ADM1',
       passwordHash,
-      role: 'admin',
-      assignedDistrict: 'Karur'
+      role: 'System Administrator'
     });
 
     const officerUser = await User.create({
-      name: 'R. Raman (Mining Inspection Officer)',
-      email: 'officer.raman@geosuraksha.tn.gov.in',
+      fullName: 'R. Raman (Mining Inspection Officer)',
+      officialEmail: 'officer.raman@geosuraksha.tn.gov.in',
+      employeeId: 'TN-MIN-2026-OFF1',
       passwordHash: officerHash,
-      role: 'officer',
-      assignedDistrict: 'Karur'
+      role: 'District Mining Officer'
     });
 
     const surveyorUser = await User.create({
-      name: 'K. Kumar (Senior Field Surveyor)',
-      email: 'surveyor.kumar@geosuraksha.tn.gov.in',
+      fullName: 'K. Kumar (Senior Field Surveyor)',
+      officialEmail: 'surveyor.kumar@geosuraksha.tn.gov.in',
+      employeeId: 'TN-MIN-2026-SUR1',
       passwordHash: officerHash,
-      role: 'surveyor',
-      assignedDistrict: 'Karur'
+      role: 'Revenue Surveyor (ULPIN)'
     });
 
     console.log('👤 Users created.');

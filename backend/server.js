@@ -86,7 +86,7 @@ app.get('/api/gis/overview-layers', async (req, res) => {
     const leases = await MiningLease.find();
     const anomalies = await SurveillanceAnomaly.find().populate('leaseId').populate('assignedOfficerId');
     const inspections = await FieldInspection.find();
-    const officers = await User.find({ role: { $in: ['officer', 'surveyor'] } }).select('-passwordHash');
+    const officers = await User.find({ role: { $in: ['District Mining Officer', 'Field Inspection Squad', 'Revenue Surveyor (ULPIN)'] } }).select('-passwordHash');
 
     res.json({
       parcels,

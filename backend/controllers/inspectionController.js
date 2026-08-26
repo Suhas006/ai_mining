@@ -45,7 +45,7 @@ async function submitInspection(req, res) {
     // 3. Create inspection record
     let inspectorId = req.user ? req.user.id : req.body.inspectorId;
     if (!inspectorId) {
-      const officer = await User.findOne({ role: { $in: ['officer', 'surveyor'] } });
+      const officer = await User.findOne({ role: { $in: ['District Mining Officer', 'Field Inspection Squad', 'Revenue Surveyor (ULPIN)'] } });
       if (officer) {
         inspectorId = officer._id;
       } else {
