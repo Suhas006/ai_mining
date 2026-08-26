@@ -94,12 +94,17 @@ export default function AISurveillanceAnalyzer({ isOpen, onClose, leases = [], o
                 value={selectedLeaseId}
                 onChange={(e) => setSelectedLeaseId(e.target.value)}
                 className="w-full bg-[#0B0F17] border border-[#1E293B] rounded p-2 text-white focus:border-[#0EA5E9]"
+                disabled={leases.length === 0}
               >
-                {leases.map(l => (
-                  <option key={l._id} value={l._id}>
-                    {l.leaseId} — {l.leaseHolderName} ({l.mineralType})
-                  </option>
-                ))}
+                {leases.length === 0 ? (
+                  <option value="">No leases found in database</option>
+                ) : (
+                  leases.map(l => (
+                    <option key={l._id} value={l._id}>
+                      {l.leaseId} — {l.leaseHolderName} ({l.mineralType})
+                    </option>
+                  ))
+                )}
               </select>
             </div>
 
@@ -140,8 +145,11 @@ export default function AISurveillanceAnalyzer({ isOpen, onClose, leases = [], o
               </button>
               <button
                 type="submit"
-                disabled={loading}
-                className="bg-[#0EA5E9] hover:bg-[#0284C7] text-white font-bold px-4 py-2 rounded flex items-center gap-1.5 shadow-md shadow-[#0EA5E9]/20"
+                disabled={loading || leases.length === 0}
+                className={`px-4 py-2 rounded flex items-center gap-1.5 shadow-md font-bold text-white
+                  ${loading || leases.length === 0 
+                    ? 'bg-slate-700 text-slate-400 cursor-not-allowed shadow-none' 
+                    : 'bg-[#0EA5E9] hover:bg-[#0284C7] shadow-[#0EA5E9]/20'}`}
               >
                 {loading ? 'Ingesting Satellite Rasters...' : 'Trigger Gemini Change Interceptor'}
               </button>

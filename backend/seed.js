@@ -13,8 +13,10 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/geosur
 
 async function seedDatabase() {
   try {
-    await mongoose.connect(MONGODB_URI);
-    console.log('🌱 Connected to MongoDB for seeding...');
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connect(MONGODB_URI);
+      console.log('🌱 Connected to MongoDB for seeding...');
+    }
 
     // Clear existing collections
     await User.deleteMany({});
@@ -232,11 +234,14 @@ async function seedDatabase() {
     console.log('✅ Field Inspection created.');
     console.log('🚀 DB Seeding completed successfully!');
 
-    process.exit(0);
   } catch (err) {
     console.error('❌ Seeding error:', err);
-    process.exit(1);
+    throw err;
   }
 }
 
-seedDatabase();
+if (require.main === module) {
+  seedDatabase().then(() => process.exit(0)).catch(() => process.exit(1));
+}
+
+module.exports = seedDatabase;

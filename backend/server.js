@@ -28,8 +28,17 @@ if (!process.env.MONGODB_URI) {
   process.exit(1);
 }
 
+const seedDatabase = require('./seed');
+
 mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('✅ MongoDB connected successfully!'))
+  .then(async () => {
+    console.log('✅ MongoDB connected successfully!');
+    const count = await MiningLease.countDocuments();
+    if (count === 0) {
+      console.log('⚠️ Database is empty. Running auto-seeder...');
+      await seedDatabase();
+    }
+  })
   .catch(err => console.error('⚠️ MongoDB Connection Error:', err));
 
 // Base route to check if API is live
