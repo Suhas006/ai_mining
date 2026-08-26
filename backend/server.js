@@ -23,11 +23,14 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
 // MongoDB Connection (Strictly use production URI)
-const MONGODB_URI = process.env.MONGODB_URI;
+if (!process.env.MONGODB_URI) {
+  console.error('CRITICAL ERROR: process.env.MONGODB_URI is undefined or not set!');
+  process.exit(1);
+}
 
-mongoose.connect(MONGODB_URI)
-  .then(() => console.log('✅ GeoSuraksha MongoDB connected successfully:', MONGODB_URI))
-  .catch(err => console.error('⚠️ MongoDB Connection Notice (Server will use local/memory fallback):', err.message));
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('✅ MongoDB connected successfully!'))
+  .catch(err => console.error('⚠️ MongoDB Connection Error:', err));
 
 // Base route to check if API is live
 app.get('/', (req, res) => {
