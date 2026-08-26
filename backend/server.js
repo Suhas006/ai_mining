@@ -18,11 +18,12 @@ const User = require('./models/User');
 const AuditLog = require('./models/AuditLog');
 
 const app = express();
+// Enable CORS for all origins (e.g. Vercel frontend)
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-// MongoDB Connection with fallback
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/geosuraksha';
+// MongoDB Connection (Strictly use production URI)
+const MONGODB_URI = process.env.MONGODB_URI;
 
 mongoose.connect(MONGODB_URI)
   .then(() => console.log('✅ GeoSuraksha MongoDB connected successfully:', MONGODB_URI))
