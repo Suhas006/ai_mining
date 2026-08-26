@@ -10,7 +10,7 @@ export default function SystemAuditLog() {
 
   const fetchLogs = async () => {
     try {
-      const res = await fetch('/api/audit-logs');
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/audit-logs`);
       if (res.ok) {
         const data = await res.json();
         // If there are real logs, use them, otherwise keep showing initial simulated logs for UI pop
@@ -41,15 +41,14 @@ export default function SystemAuditLog() {
           Auto-Updating
         </span>
       </div>
-      
+
       <div className="flex-1 overflow-y-auto p-4 space-y-2.5 font-mono text-[11px]">
         {logs.map((log) => (
           <div key={log.id} className="flex items-start gap-3 border-b border-slate-800/60 pb-2">
             <span className="text-slate-500 font-bold">[{log.time}]</span>
-            <span className={`flex-1 ${
-              log.type === 'alert' ? 'text-red-400 font-bold' : 
-              log.type === 'success' ? 'text-emerald-400 font-bold' : 'text-slate-300'
-            }`}>
+            <span className={`flex-1 ${log.type === 'alert' ? 'text-red-400 font-bold' :
+                log.type === 'success' ? 'text-emerald-400 font-bold' : 'text-slate-300'
+              }`}>
               {log.msg}
             </span>
           </div>

@@ -17,7 +17,7 @@ export default function AISurveillanceAnalyzer({ isOpen, onClose, leases = [], o
     setResult(null);
 
     try {
-      const res = await fetch('/api/surveillance/analyze-raster', {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/surveillance/analyze-raster`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

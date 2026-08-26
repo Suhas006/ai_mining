@@ -39,7 +39,7 @@ export default function ParcelRegisterModal({ isOpen, onClose, onRegisterSuccess
         throw new Error('Invalid GeoJSON syntax. Please check coordinates format.');
       }
 
-      const res = await fetch('/api/parcels/register', {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/parcels/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

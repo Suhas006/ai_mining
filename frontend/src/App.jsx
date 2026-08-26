@@ -42,7 +42,7 @@ export default function App() {
   // Fetch overview layers from backend
   const fetchLayers = async () => {
     try {
-      const res = await fetch('/api/gis/overview-layers');
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/gis/overview-layers`);
       if (res.ok) {
         const data = await res.json();
         setParcels(data.parcels || []);
@@ -64,7 +64,7 @@ export default function App() {
 
   const handleUpdateAnomalyStatus = async (id, status) => {
     try {
-      const res = await fetch(`/api/anomalies/${id}/status`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/anomalies/${id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
@@ -77,7 +77,7 @@ export default function App() {
 
   const handleAssignOfficer = async (id, officerId) => {
     try {
-      const res = await fetch(`/api/anomalies/${id}/assign`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/anomalies/${id}/assign`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ officerId })

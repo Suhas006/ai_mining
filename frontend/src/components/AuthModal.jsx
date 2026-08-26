@@ -41,7 +41,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
       if (formData.otp === '123456' || formData.otp.length === 6) {
         const endpoint = isRegister ? '/api/auth/register' : '/api/auth/login';
         try {
-          const res = await fetch(endpoint, {
+          const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}${endpoint}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(formData)
