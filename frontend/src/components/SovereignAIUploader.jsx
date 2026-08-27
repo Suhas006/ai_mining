@@ -17,7 +17,9 @@ const SovereignAIUploader = ({ onScanComplete }) => {
         formData.append('file', file);
 
         try {
-            const response = await fetch('http://localhost:5000/api/ai/analyze-raster', {
+            // Adapts automatically to Vercel production URL or local development
+            const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+            const response = await fetch(`${baseUrl}/api/ai/analyze-raster`, {
                 method: 'POST',
                 body: formData,
             });
@@ -25,16 +27,15 @@ const SovereignAIUploader = ({ onScanComplete }) => {
             const data = await response.json();
             setAnomalies(data.anomalies);
 
-            // If anomalies were successfully saved to MongoDB, trigger live app sync!
             if (data.savedToDatabase > 0) {
                 alert(`Success! ${data.savedToDatabase} unpermitted pit(s) saved to database and sent to Triage Queue.`);
                 if (onScanComplete) {
-                    onScanComplete(); // Instantly re-fetches map layers without reloading the page
+                    onScanComplete();
                 }
             }
         } catch (error) {
             console.error("Upload failed:", error);
-            alert("Error connecting to the Express backend.");
+            alert("Error connecting to the backend API.");
         } finally {
             setLoading(false);
         }
@@ -59,7 +60,6 @@ const SovereignAIUploader = ({ onScanComplete }) => {
                 {loading ? "AI is analyzing..." : "Scan for Anomalies"}
             </button>
 
-            {/* Display the AI Results */}
             {anomalies && (
                 <div className="mt-4 p-4 bg-gray-50 rounded-lg">
                     <h3 className="font-bold text-green-600 mb-2">Scan Complete!</h3>
