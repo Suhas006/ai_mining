@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 
-// --- NEW IMPORTS FOR AI PROXY ---
+// --- IMPORTS FOR AI PROXY ---
 const multer = require('multer');
 const axios = require('axios');
 const FormData = require('form-data');
@@ -83,30 +83,56 @@ app.get('/api/anomalies', getAnomalies);
 app.patch('/api/anomalies/:id/status', updateAnomalyStatus);
 app.patch('/api/anomalies/:id/assign', assignAnomalyOfficer);
 
-// --- NEW SOVEREIGN AI PROXY ROUTE ---
-// This catches the image from React and forwards it to Python (Port 8000)
+// --- SOVEREIGN AI PROXY & MONGODB SAVE ROUTE ---
 app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No satellite image provided' });
     }
 
+    // 1. Package image for Python
     const formData = new FormData();
     formData.append('file', req.file.buffer, {
       filename: req.file.originalname,
       contentType: req.file.mimetype,
     });
 
+    // 2. Call Python FastAPI AI Engine (Port 8000)
     const aiResponse = await axios.post('http://127.0.0.1:8000/api/ai/analyze-raster', formData, {
       headers: {
         ...formData.getHeaders(),
       },
     });
 
-    res.json(aiResponse.data);
+    const { status, anomalies } = aiResponse.data;
+
+    // 3. Automatically save any detected anomalies into MongoDB!
+    const savedAnomalies = [];
+    if (anomalies && anomalies.length > 0) {
+      for (const anomaly of anomalies) {
+        const newAnomaly = new SurveillanceAnomaly({
+          type: anomaly.type || 'Unpermitted Pit',
+          confidence: anomaly.confidence,
+          bounding_box: anomaly.bounding_box,
+          status: 'Pending_Inspection',
+          detectedAt: new Date(),
+          source: 'Sovereign AI YOLOv8 Engine'
+        });
+        const saved = await newAnomaly.save();
+        savedAnomalies.push(saved);
+      }
+    }
+
+    // 4. Return results and database save count back to React
+    res.json({
+      status,
+      anomalies,
+      savedToDatabase: savedAnomalies.length
+    });
+
   } catch (error) {
-    console.error("AI Proxy Error:", error.message);
-    res.status(500).json({ error: "Failed to connect to Python AI Engine", details: error.message });
+    console.error("AI Proxy & DB Error:", error.message);
+    res.status(500).json({ error: "Failed to process AI pipeline", details: error.message });
   }
 });
 

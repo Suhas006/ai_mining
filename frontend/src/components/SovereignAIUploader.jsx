@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const SovereignAIUploader = () => {
+const SovereignAIUploader = ({ onScanComplete }) => {
     const [file, setFile] = useState(null);
     const [loading, setLoading] = useState(false);
     const [anomalies, setAnomalies] = useState(null);
@@ -17,15 +17,21 @@ const SovereignAIUploader = () => {
         formData.append('file', file);
 
         try {
-            // Notice we are hitting Port 5000 (Express), NOT 8000 (Python)!
-            // Node.js will handle the secure handoff to Python for us.
-            // Change it to exactly this:
             const response = await fetch('http://localhost:5000/api/ai/analyze-raster', {
                 method: 'POST',
                 body: formData,
             });
+
             const data = await response.json();
             setAnomalies(data.anomalies);
+
+            // If anomalies were successfully saved to MongoDB, trigger live app sync!
+            if (data.savedToDatabase > 0) {
+                alert(`Success! ${data.savedToDatabase} unpermitted pit(s) saved to database and sent to Triage Queue.`);
+                if (onScanComplete) {
+                    onScanComplete(); // Instantly re-fetches map layers without reloading the page
+                }
+            }
         } catch (error) {
             console.error("Upload failed:", error);
             alert("Error connecting to the Express backend.");
