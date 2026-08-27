@@ -15,6 +15,9 @@ import EncroachmentDetailModal from './components/EncroachmentDetailModal';
 import SystemAuditLog from './components/SystemAuditLog';
 import AuthModal from './components/AuthModal';
 
+// --- NEW SOVEREIGN AI IMPORT ---
+import SovereignAIUploader from './components/SovereignAIUploader';
+
 export default function App() {
   const [activeTab, setActiveTab] = useState('map'); // 'map' | 'monitor' | 'triage'
   const [isDaytimeMode, setIsDaytimeMode] = useState(false);
@@ -164,7 +167,13 @@ export default function App() {
                   }}
                 />
               </div>
-              <div className="xl:col-span-1">
+
+              {/* --- RIGHT SIDEBAR COLUMN WITH UPLOADER & LOGS --- */}
+              <div className="xl:col-span-1 space-y-6">
+
+                {/* THIS IS THE NEW COMPONENT WE ADDED */}
+                <SovereignAIUploader />
+
                 <SystemAuditLog />
               </div>
             </div>
