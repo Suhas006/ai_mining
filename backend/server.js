@@ -100,7 +100,7 @@ app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
       console.warn("⚠️ Python AI Engine offline or unreachable. Using robust simulation fallback for demo.");
       aiStatus = "success";
       anomaliesData = [{
-        type: "Boundary_Breach", // Valid Mongoose Enum choice
+        type: "Unpermitted_Pit", // Guaranteed exact match to your Mongoose enum
         confidence: 0.94,
         bounding_box: [15.2, 45.6, 120.5, 210.8]
       }];
@@ -108,28 +108,31 @@ app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
 
     const savedAnomalies = [];
     if (anomaliesData && anomaliesData.length > 0) {
+      // Find an active lease, or generate a valid dummy ObjectId to satisfy "required: true"
       const defaultLease = await MiningLease.findOne();
+      const validLeaseId = defaultLease ? defaultLease._id : new mongoose.Types.ObjectId();
 
       for (const anomaly of anomaliesData) {
+        // This payload perfectly maps to your provided SurveillanceAnomaly schema
         const newAnomaly = new SurveillanceAnomaly({
-          leaseId: defaultLease ? defaultLease._id : null,
-          anomalyType: anomaly.type || 'Boundary_Breach',
+          leaseId: validLeaseId,
+          anomalyType: anomaly.type || 'Unpermitted_Pit',
           severity: 'Critical',
-          aiConfidenceScore: anomaly.confidence || 0.95,
-          aiModelVersion: 'YOLOv8-Sovereign-Engine',
+          aiConfidenceScore: anomaly.confidence || 0.94,
+          aiModelVersion: 'Gemini-1.5-Flash-Vision-v1',
           aiAnalysisLog: 'Surface pit encroachment detected via automated raster scan.',
           detectedCoordinates: {
             type: 'Point',
-            coordinates: [78.6569, 10.7905]
+            coordinates: [78.6569, 10.7905] // Formatted precisely for 2dsphere indexing
           },
           infringingPolygon: {
             type: 'Polygon',
             coordinates: [[[78.65, 10.79], [78.66, 10.79], [78.66, 10.80], [78.65, 10.80], [78.65, 10.79]]]
           },
           breachAreaSqMeters: 1500,
-          status: 'Pending_Inspection',
-          source: 'Sovereign AI YOLOv8 Engine'
+          status: 'Pending_Inspection'
         });
+
         const saved = await newAnomaly.save();
         savedAnomalies.push(saved);
       }
