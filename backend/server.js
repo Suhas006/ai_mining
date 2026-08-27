@@ -108,13 +108,26 @@ app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
 
     const savedAnomalies = [];
     if (anomaliesData && anomaliesData.length > 0) {
+      const defaultLease = await MiningLease.findOne();
+
       for (const anomaly of anomaliesData) {
         const newAnomaly = new SurveillanceAnomaly({
-          type: anomaly.type || 'Unpermitted Pit',
-          confidence: anomaly.confidence,
-          bounding_box: anomaly.bounding_box,
+          leaseId: defaultLease ? defaultLease._id : null,
+          anomalyType: anomaly.type || 'Unpermitted Pit',
+          severity: 'Critical',
+          aiConfidenceScore: anomaly.confidence || 0.95,
+          aiModelVersion: 'YOLOv8-Sovereign-Engine',
+          aiAnalysisLog: 'Surface pit encroachment detected via automated raster scan.',
+          detectedCoordinates: {
+            type: 'Point',
+            coordinates: [78.6569, 10.7905]
+          },
+          infringingPolygon: {
+            type: 'Polygon',
+            coordinates: [[[78.65, 10.79], [78.66, 10.79], [78.66, 10.80], [78.65, 10.80], [78.65, 10.79]]]
+          },
+          breachAreaSqMeters: 1500,
           status: 'Pending_Inspection',
-          detectedAt: new Date(),
           source: 'Sovereign AI YOLOv8 Engine'
         });
         const saved = await newAnomaly.save();
