@@ -18,8 +18,7 @@ const SovereignAIUploader = ({ onScanComplete }) => {
 
         try {
             // Adapts automatically to Vercel production URL or local development
-            const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
-            const response = await fetch(`${baseUrl}/api/ai/analyze-raster`, {
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/ai/analyze-raster`, {
                 method: 'POST',
                 body: formData,
             });
