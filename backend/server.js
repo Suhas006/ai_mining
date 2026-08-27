@@ -100,7 +100,7 @@ app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
       console.warn("⚠️ Python AI Engine offline or unreachable. Using robust simulation fallback for demo.");
       aiStatus = "success";
       anomaliesData = [{
-        type: "Unpermitted Pit Encroachment",
+        type: "Boundary_Breach", // Valid Mongoose Enum choice
         confidence: 0.94,
         bounding_box: [15.2, 45.6, 120.5, 210.8]
       }];
@@ -113,7 +113,7 @@ app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
       for (const anomaly of anomaliesData) {
         const newAnomaly = new SurveillanceAnomaly({
           leaseId: defaultLease ? defaultLease._id : null,
-          anomalyType: anomaly.type || 'Unpermitted Pit',
+          anomalyType: anomaly.type || 'Boundary_Breach',
           severity: 'Critical',
           aiConfidenceScore: anomaly.confidence || 0.95,
           aiModelVersion: 'YOLOv8-Sovereign-Engine',
