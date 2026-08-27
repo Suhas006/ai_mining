@@ -19,11 +19,11 @@ const SovereignAIUploader = () => {
         try {
             // Notice we are hitting Port 5000 (Express), NOT 8000 (Python)!
             // Node.js will handle the secure handoff to Python for us.
-            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/ai/analyze-raster`, {
+            // Change it to exactly this:
+            const response = await fetch('http://localhost:5000/api/ai/analyze-raster', {
                 method: 'POST',
                 body: formData,
             });
-
             const data = await response.json();
             setAnomalies(data.anomalies);
         } catch (error) {

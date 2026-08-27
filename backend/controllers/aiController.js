@@ -1,38 +1,35 @@
 const axios = require('axios');
 const FormData = require('form-data');
-// ... your other imports like Turf.js ...
 
-const analyzeRasterWithLocalAI = async (req, res) => {
+exports.analyzeRaster = async (req, res) => {
     try {
-        // 1. Create a FormData object to hold the image
-        // (Assuming you use 'multer' to receive the image from React into req.file)
-        const form = new FormData();
-        form.append('file', req.file.buffer, { filename: req.file.originalname });
+        // 1. Check if React actually sent a file
+        if (!req.file) {
+            return res.status(400).json({ error: 'No satellite image provided' });
+        }
 
-        // 2. Ping your local Python Sovereign AI Engine
-        console.log("Sending raster to local YOLOv8 AI...");
-        const aiResponse = await axios.post('http://localhost:8000/api/ai/analyze-raster', form, {
+        // 2. Package the image buffer into form-data for Python
+        const formData = new FormData();
+        formData.append('file', req.file.buffer, {
+            filename: req.file.originalname,
+            contentType: req.file.mimetype,
+        });
+
+        // 3. Fire it over to the local Python FastAPI server (Port 8000)
+        const aiResponse = await axios.post('http://127.0.0.1:8000/api/ai/analyze-raster', formData, {
             headers: {
-                ...form.getHeaders() // Crucial for multipart file uploads
-            }
+                ...formData.getHeaders(),
+            },
         });
 
-        // 3. Extract the anomalies flagged by YOLOv8
-        const anomalies = aiResponse.data.anomalies;
-
-        // 4. (Optional) Run your Turf.js logic here to verify the anomaly 
-        // bounding boxes against the ULPIN boundaries...
-
-        // 5. Send the final, secure JSON payload back to the React frontend
-        res.status(200).json({
-            message: "Raster analyzed successfully by Sovereign AI",
-            anomalies: anomalies
-        });
+        // 4. Send the YOLOv8 math results straight back to React
+        res.json(aiResponse.data);
 
     } catch (error) {
-        console.error("AI Microservice Connection Failed:", error.message);
-        res.status(500).json({ error: "Failed to reach the local AI engine." });
+        console.error("AI Proxy Error:", error.message);
+        res.status(500).json({
+            error: "Failed to connect to Python AI Engine",
+            details: error.message
+        });
     }
 };
-
-module.exports = { analyzeRasterWithLocalAI };

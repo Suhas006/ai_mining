@@ -3,6 +3,11 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 
+// --- NEW IMPORTS FOR AI PROXY ---
+const multer = require('multer');
+const axios = require('axios');
+const FormData = require('form-data');
+
 const { register, login, getMe } = require('./controllers/authController');
 const { registerParcel, getParcels, searchParcels } = require('./controllers/parcelController');
 const { analyzeRaster, getAnomalies, updateAnomalyStatus, assignAnomalyOfficer } = require('./controllers/surveillanceController');
@@ -21,6 +26,9 @@ const app = express();
 // Enable CORS for all origins (e.g. Vercel frontend)
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
+
+// Configure multer to hold the uploaded image in memory temporarily
+const upload = multer({ storage: multer.memoryStorage() });
 
 // MongoDB Connection (Strictly use production URI)
 if (!process.env.MONGODB_URI) {
@@ -43,10 +51,10 @@ mongoose.connect(process.env.MONGODB_URI)
 
 // Base route to check if API is live
 app.get('/', (req, res) => {
-  res.status(200).json({ 
-    status: "Online", 
+  res.status(200).json({
+    status: "Online",
     system: "GeoSuraksha API Server",
-    version: "1.0.0" 
+    version: "1.0.0"
   });
 });
 
@@ -69,11 +77,38 @@ app.post('/api/parcels/register', registerParcel);
 app.get('/api/parcels', getParcels);
 app.get('/api/parcels/search', searchParcels);
 
-// Satellite AI Surveillance Routes
+// Existing Surveillance Routes
 app.post('/api/surveillance/analyze-raster', analyzeRaster);
 app.get('/api/anomalies', getAnomalies);
 app.patch('/api/anomalies/:id/status', updateAnomalyStatus);
 app.patch('/api/anomalies/:id/assign', assignAnomalyOfficer);
+
+// --- NEW SOVEREIGN AI PROXY ROUTE ---
+// This catches the image from React and forwards it to Python (Port 8000)
+app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No satellite image provided' });
+    }
+
+    const formData = new FormData();
+    formData.append('file', req.file.buffer, {
+      filename: req.file.originalname,
+      contentType: req.file.mimetype,
+    });
+
+    const aiResponse = await axios.post('http://127.0.0.1:8000/api/ai/analyze-raster', formData, {
+      headers: {
+        ...formData.getHeaders(),
+      },
+    });
+
+    res.json(aiResponse.data);
+  } catch (error) {
+    console.error("AI Proxy Error:", error.message);
+    res.status(500).json({ error: "Failed to connect to Python AI Engine", details: error.message });
+  }
+});
 
 // Field Inspection Routes
 app.post('/api/inspection/submit', submitInspection);
