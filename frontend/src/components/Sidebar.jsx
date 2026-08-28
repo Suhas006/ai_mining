@@ -7,7 +7,7 @@ const Sidebar = () => {
     <div className="w-64 h-screen bg-[#0B0F17] border-r border-[#1E293B] flex flex-col text-[#94A3B8] transition-all flex-shrink-0">
       <div className="p-6 border-b border-[#1E293B] flex items-center gap-3">
         <div className="w-8 h-8 rounded bg-gradient-to-br from-[#0EA5E9] to-[#2563EB] flex items-center justify-center text-white font-bold shadow-[0_0_15px_rgba(14,165,233,0.5)]">
-          G
+          <Map className="w-5 h-5" />
         </div>
         <div>
           <h1 className="text-white font-bold text-sm tracking-wide">DepthFence</h1>
