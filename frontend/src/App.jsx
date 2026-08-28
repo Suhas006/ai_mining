@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import BoundaryScanner from './pages/BoundaryScanner';
 import DepthMapping from './pages/DepthMapping';
+import Scanner2D from './pages/Scanner2D';
 
 // Existing Components
 import ThreeDPitViewer from './components/ThreeDPitViewer';
@@ -88,17 +89,18 @@ export default function App() {
     }
   };
 
+
   return (
     <BrowserRouter>
       <div className="flex h-screen w-full bg-[#0B0F17] overflow-hidden font-sans text-slate-200">
         <Sidebar />
-        
+
         <div className="flex-1 flex flex-col h-full overflow-hidden relative">
           <Routes>
-            <Route 
-              path="/" 
+            <Route
+              path="/"
               element={
-                <BoundaryScanner 
+                <BoundaryScanner
                   parcels={parcels}
                   leases={leases}
                   anomalies={anomalies}
@@ -111,11 +113,15 @@ export default function App() {
                   }}
                   fetchLayers={fetchLayers}
                 />
-              } 
+              }
             />
-            <Route 
-              path="/3d-mapping" 
-              element={<DepthMapping />} 
+            <Route
+              path="/3d-mapping"
+              element={<DepthMapping />}
+            />
+            <Route
+              path="/scanner-2d"
+              element={<Scanner2D />}
             />
           </Routes>
         </div>
