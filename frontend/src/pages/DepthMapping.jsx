@@ -17,7 +17,7 @@ const DepthMapping = () => {
   const fetchRealElevation = async (latitude, longitude) => {
     try {
       // ⚠️ UPDATE THIS LINK TO YOUR ACTUAL RENDER BACKEND URL ⚠️
-      const backendUrl = 'https://YOUR-RENDER-BACKEND-URL.onrender.com';
+      const backendUrl = 'https://ai-mining.onrender.com';
 
       const response = await fetch(`${backendUrl}/api/elevation?lat=${latitude}&lng=${longitude}`);
 
