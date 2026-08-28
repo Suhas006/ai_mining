@@ -26,7 +26,7 @@ export default function CsvExportButton({ data }) {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "GeoSuraksha_Anomalies_Export.csv");
+    link.setAttribute("download", "DepthFence_Anomalies_Export.csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

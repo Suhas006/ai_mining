@@ -11,7 +11,7 @@ model = YOLO('yolov8n.pt')
 
 @app.get("/")
 def health_check():
-    return {"status": "online", "system": "GeoSuraksha Sovereign AI"}
+    return {"status": "online", "system": "DepthFence Sovereign AI"}
 
 @app.post("/api/ai/analyze-raster")
 async def analyze_raster(file: UploadFile = File(...)):

@@ -33,7 +33,7 @@ export default function Navbar({
             </div>
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <h1 className="font-extrabold text-xl tracking-wider uppercase text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">GEOSURAKSHA</h1>
+                <h1 className="font-extrabold text-xl tracking-wider uppercase text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">DEPTHFENCE</h1>
                 <span className="bg-[#0EA5E9]/20 text-[#0EA5E9] text-[10px] font-mono px-2 py-0.5 rounded border border-[#0EA5E9]/30 uppercase tracking-wider font-bold whitespace-nowrap shadow-sm">
                   GOVT GRID v2
                 </span>

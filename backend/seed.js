@@ -9,7 +9,7 @@ const SurveillanceAnomaly = require('./models/SurveillanceAnomaly');
 const FieldInspection = require('./models/FieldInspection');
 const { generateUlpin } = require('./utils/ulpinGenerator');
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/geosuraksha';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/depthfence';
 
 async function seedDatabase() {
   try {
@@ -33,7 +33,7 @@ async function seedDatabase() {
 
     const adminUser = await User.create({
       fullName: 'Dr. S. K. Murugan (District Collector)',
-      officialEmail: 'admin@geosuraksha.tn.gov.in',
+      officialEmail: 'admin@depthfence.tn.gov.in',
       employeeId: 'TN-MIN-2026-ADM1',
       passwordHash,
       role: 'System Administrator'
@@ -41,7 +41,7 @@ async function seedDatabase() {
 
     const officerUser = await User.create({
       fullName: 'R. Raman (Mining Inspection Officer)',
-      officialEmail: 'officer.raman@geosuraksha.tn.gov.in',
+      officialEmail: 'officer.raman@depthfence.tn.gov.in',
       employeeId: 'TN-MIN-2026-OFF1',
       passwordHash: officerHash,
       role: 'District Mining Officer'
@@ -49,7 +49,7 @@ async function seedDatabase() {
 
     const surveyorUser = await User.create({
       fullName: 'K. Kumar (Senior Field Surveyor)',
-      officialEmail: 'surveyor.kumar@geosuraksha.tn.gov.in',
+      officialEmail: 'surveyor.kumar@depthfence.tn.gov.in',
       employeeId: 'TN-MIN-2026-SUR1',
       passwordHash: officerHash,
       role: 'Revenue Surveyor (ULPIN)'

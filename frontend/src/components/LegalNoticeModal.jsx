@@ -150,7 +150,7 @@ export default function LegalNoticeModal({ anomaly, isOpen, onClose }) {
           <div style={{ backgroundColor: '#0F172A', color: '#FFFFFF', padding: '20px', textAlign: 'center', borderRadius: '6px', marginBottom: '25px' }}>
             <h1 style={{ fontSize: '22px', margin: '0 0 5px 0', letterSpacing: '1px' }}>GOVERNMENT OF TAMIL NADU</h1>
             <p style={{ fontSize: '12px', margin: '0', color: '#94A3B8' }}>DEPARTMENT OF GEOLOGY & MINING / DILRMP SURVEILLANCE GRID</p>
-            <p style={{ fontSize: '11px', margin: '3px 0 0 0', color: '#38BDF8' }}>GEOSURAKSHA UNIFIED 3D ULPIN ENFORCEMENT SYSTEM v2.0</p>
+            <p style={{ fontSize: '11px', margin: '3px 0 0 0', color: '#38BDF8' }}>DEPTHFENCE UNIFIED 3D ULPIN ENFORCEMENT SYSTEM v2.0</p>
           </div>
 
           {/* Title */}
@@ -208,7 +208,7 @@ export default function LegalNoticeModal({ anomaly, isOpen, onClose }) {
             <div style={{ textAlign: 'right' }}>
               <strong>Digital Signature Verification:</strong><br />
               SHA256: GS-GRID-2026-8F7D9A1E-STDM<br />
-              Verified via GeoSuraksha 3D Grid Engine
+              Verified via DepthFence 3D Grid Engine
             </div>
           </div>
         </div>

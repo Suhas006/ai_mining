@@ -8,7 +8,7 @@ function authMiddleware(req, res, next) {
 
   const token = authHeader.split(' ')[1];
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'geosuraksha_kalam_awards_secret_key_2026');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'depthfence_kalam_awards_secret_key_2026');
     req.user = decoded;
     next();
   } catch (err) {

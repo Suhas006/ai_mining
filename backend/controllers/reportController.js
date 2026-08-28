@@ -45,7 +45,7 @@ async function generateLegalNotice(req, res) {
     doc
       .fontSize(10)
       .fillColor('#94A3B8')
-      .text('GEOSURAKSHA AUTOMATED LEGAL NOTICE ENGINE v2.0', 50, 75, { align: 'center' });
+      .text('DEPTHFENCE AUTOMATED LEGAL NOTICE ENGINE v2.0', 50, 75, { align: 'center' });
 
     doc.moveDown(3);
 
@@ -133,7 +133,7 @@ async function generateLegalNotice(req, res) {
 
     doc.font('Helvetica-Bold').text('Digital Signature Verification:', 350, 600);
     doc.font('Helvetica').text(`SHA256: ${anomaly._id}00987X`, 350, 615);
-    doc.text('Verified via GeoSuraksha Grid', 350, 630);
+    doc.text('Verified via DepthFence Grid', 350, 630);
 
     doc.end();
 

@@ -55,7 +55,7 @@ export const generateLegalNotice = (anomaly) => {
 
   // Signature Block
   doc.setFont("helvetica", "normal");
-  doc.text("Automated Dispatch via GeoSuraksha AI Grid", 20, 250);
+  doc.text("Automated Dispatch via DepthFence AI Grid", 20, 250);
   doc.text("Authorized by: R. Raman (Mining Inspection Officer)", 20, 260);
 
   // Download

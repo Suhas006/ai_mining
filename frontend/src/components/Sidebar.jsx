@@ -10,7 +10,7 @@ const Sidebar = () => {
           G
         </div>
         <div>
-          <h1 className="text-white font-bold text-sm tracking-wide">GeoSuraksha</h1>
+          <h1 className="text-white font-bold text-sm tracking-wide">DepthFence</h1>
           <p className="text-[10px] text-[#0EA5E9] font-mono">Enterprise Grid</p>
         </div>
       </div>

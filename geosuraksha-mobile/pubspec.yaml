@@ -1,5 +1,5 @@
-name: geosuraksha_mobile
-description: "GeoSuraksha Offline-First Field Enforcement App for Surveyors & Officers"
+name: depthfence_mobile
+description: "DepthFence Offline-First Field Enforcement App for Surveyors & Officers"
 publish_to: 'none'
 version: 1.0.0+1
 

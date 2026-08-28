@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const AuditLog = require('../models/AuditLog');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'geosuraksha_kalam_awards_secret_key_2026';
+const JWT_SECRET = process.env.JWT_SECRET || 'depthfence_kalam_awards_secret_key_2026';
 
 async function register(req, res) {
   try {

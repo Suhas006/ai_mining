@@ -117,7 +117,7 @@ export default function FieldInspectionSim({ isOpen, onClose, anomalies = [], on
       </div>
 
       <div className="text-[11px] text-slate-500 text-center border-t border-slate-800 pt-3">
-        GeoSuraksha Mobile Hive Sync Engine v2.0
+        DepthFence Mobile Hive Sync Engine v2.0
       </div>
     </div>
   );

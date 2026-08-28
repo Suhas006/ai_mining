@@ -86,7 +86,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
             </div>
             <div>
               <h2 className="text-base font-bold tracking-wide text-slate-100 uppercase">
-                GEOSURAKSHA GOVERNMENT ACCESS PORTAL
+                DEPTHFENCE GOVERNMENT ACCESS PORTAL
               </h2>
               <p className="text-xs text-slate-400">
                 Department of Geology & Mining / DILRMP Spatial Grid

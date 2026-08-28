@@ -48,7 +48,7 @@ mongoose.connect(process.env.MONGODB_URI)
 app.get('/', (req, res) => {
   res.status(200).json({
     status: "Online",
-    system: "GeoSuraksha API Server",
+    system: "DepthFence API Server",
     version: "1.0.0"
   });
 });
@@ -56,7 +56,7 @@ app.get('/', (req, res) => {
 app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
-    system: 'GeoSuraksha Unified 3D ULPIN & Mining Surveillance Grid API',
+    system: 'DepthFence Unified 3D ULPIN & Mining Surveillance Grid API',
     timestamp: new Date().toISOString()
   });
 });
@@ -206,5 +206,5 @@ app.get('/api/elevation', async (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`🚀 GeoSuraksha API Server running on port ${PORT}`);
+  console.log(`🚀 DepthFence API Server running on port ${PORT}`);
 });

@@ -1,8 +1,8 @@
-# GeoSuraksha
+# DepthFence
 **Unified 3D ULPIN & Mining Surveillance Grid**
 
 ## 1. Project Overview
-GeoSuraksha is an advanced, AI-powered GIS platform built to monitor, detect, and enforce legal boundaries for mining leases. By integrating multi-temporal satellite raster imagery, the platform identifies illegal excavation, boundary breaches, and environmental encroachments in real-time. It bridges the gap between high-level satellite surveillance and on-the-ground mobile inspection squads, ensuring rapid triage and enforcement against illegal mining activities.
+DepthFence is an advanced, AI-powered GIS platform built to monitor, detect, and enforce legal boundaries for mining leases. By integrating multi-temporal satellite raster imagery, the platform identifies illegal excavation, boundary breaches, and environmental encroachments in real-time. It bridges the gap between high-level satellite surveillance and on-the-ground mobile inspection squads, ensuring rapid triage and enforcement against illegal mining activities.
 
 ## 2. Tech Stack
 The system is built on a modern **MERN** stack architecture optimized for geospatial data:
@@ -34,7 +34,7 @@ To run this project locally, ensure you have the following environment variables
 **Backend (`backend/.env`):**
 ```env
 # Required for database connection
-MONGODB_URI=mongodb://127.0.0.1:27017/geosuraksha
+MONGODB_URI=mongodb://127.0.0.1:27017/depthfence
 
 # Required for AI Raster Change Detection
 GEMINI_API_KEY=your_gemini_api_key_here
