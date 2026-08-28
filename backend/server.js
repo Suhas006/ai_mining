@@ -100,7 +100,7 @@ app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
       console.warn("⚠️ Python AI Engine offline or unreachable. Using robust simulation fallback for demo.");
       aiStatus = "success";
       anomaliesData = [{
-        type: "Unpermitted_Pit", // Guaranteed exact match to your Mongoose enum
+        type: "Unpermitted_Pit",
         confidence: 0.94,
         bounding_box: [15.2, 45.6, 120.5, 210.8]
       }];
@@ -108,12 +108,10 @@ app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
 
     const savedAnomalies = [];
     if (anomaliesData && anomaliesData.length > 0) {
-      // Find an active lease, or generate a valid dummy ObjectId to satisfy "required: true"
       const defaultLease = await MiningLease.findOne();
       const validLeaseId = defaultLease ? defaultLease._id : new mongoose.Types.ObjectId();
 
       for (const anomaly of anomaliesData) {
-        // This payload perfectly maps to your provided SurveillanceAnomaly schema
         const newAnomaly = new SurveillanceAnomaly({
           leaseId: validLeaseId,
           anomalyType: anomaly.type || 'Unpermitted_Pit',
@@ -123,7 +121,7 @@ app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
           aiAnalysisLog: 'Surface pit encroachment detected via automated raster scan.',
           detectedCoordinates: {
             type: 'Point',
-            coordinates: [78.6569, 10.7905] // Formatted precisely for 2dsphere indexing
+            coordinates: [78.6569, 10.7905]
           },
           infringingPolygon: {
             type: 'Polygon',
@@ -182,6 +180,27 @@ app.get('/api/audit-logs', async (req, res) => {
     res.json(logs);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch audit logs' });
+  }
+});
+
+// --- NEW ROUTE FOR 3D ELEVATION (Bypasses CORS entirely) ---
+app.get('/api/elevation', async (req, res) => {
+  try {
+    const { lat, lng } = req.query;
+
+    if (!lat || !lng) {
+      return res.status(400).json({ error: 'Latitude and Longitude are required' });
+    }
+
+    // Your backend makes the call directly to NASA
+    const nasaUrl = `https://api.opentopodata.org/v1/srtm30m?locations=${lat},${lng}`;
+    const response = await axios.get(nasaUrl);
+
+    res.json(response.data);
+
+  } catch (error) {
+    console.error('Elevation Fetch Error:', error.message);
+    res.status(500).json({ error: 'Failed to fetch elevation data' });
   }
 });
 

@@ -7,25 +7,20 @@ const DepthMapping = () => {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
 
-  // Function to fetch REAL Z-axis elevation data using a highly stable proxy
+  // Function to fetch REAL Z-axis elevation data via your own Node.js backend
   const fetchRealElevation = async (latitude, longitude) => {
     try {
-      // 1. The Real NASA API URL
-      const apiUrl = `https://api.opentopodata.org/v1/srtm30m?locations=${latitude},${longitude}`;
+      // Dynamic URL for local development or Vercel/Render production
+      const backendUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
-      // 2. Using 'allorigins.win' - the most reliable free proxy for Hackathons
-      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`;
+      const response = await fetch(`${backendUrl}/api/elevation?lat=${latitude}&lng=${longitude}`);
 
-      const response = await fetch(proxyUrl);
-
-      // 3. Prevent crashing if the server is down
       if (!response.ok) {
-        throw new Error(`API returned status: ${response.status}`);
+        throw new Error(`Backend returned status: ${response.status}`);
       }
 
       const data = await response.json();
 
-      // 4. Safety check to make sure data actually exists before reading it
       if (data && data.results && data.results.length > 0) {
         return data.results[0].elevation;
       } else {
@@ -35,7 +30,7 @@ const DepthMapping = () => {
 
     } catch (error) {
       console.error("Error fetching real terrain data:", error);
-      alert("Satellite API request blocked or busy. Please try again.");
+      alert("Backend connection failed. Make sure your server URL is correct.");
       return null;
     }
   };
