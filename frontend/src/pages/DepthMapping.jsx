@@ -2,21 +2,40 @@ import React, { useState } from 'react';
 import { Cuboid, AlertTriangle, Download, ArrowDownToLine, MapPin, Activity } from 'lucide-react';
 
 const DepthMapping = () => {
-  // Direct User Input for Coordinates (No Dummy Data)
   const [lat, setLat] = useState('');
   const [lng, setLng] = useState('');
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
 
-  // Function to fetch REAL Z-axis elevation data from NASA SRTM using a CORS Proxy
+  // Function to fetch REAL Z-axis elevation data using a highly stable proxy
   const fetchRealElevation = async (latitude, longitude) => {
     try {
-      // Adding corsproxy.io to bypass browser security blocks during the hackathon demo
-      const response = await fetch(`https://corsproxy.io/?https://api.opentopodata.org/v1/srtm30m?locations=${latitude},${longitude}`);
+      // 1. The Real NASA API URL
+      const apiUrl = `https://api.opentopodata.org/v1/srtm30m?locations=${latitude},${longitude}`;
+
+      // 2. Using 'allorigins.win' - the most reliable free proxy for Hackathons
+      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`;
+
+      const response = await fetch(proxyUrl);
+
+      // 3. Prevent crashing if the server is down
+      if (!response.ok) {
+        throw new Error(`API returned status: ${response.status}`);
+      }
+
       const data = await response.json();
-      return data.results[0].elevation;
+
+      // 4. Safety check to make sure data actually exists before reading it
+      if (data && data.results && data.results.length > 0) {
+        return data.results[0].elevation;
+      } else {
+        console.error("No elevation data found in response");
+        return null;
+      }
+
     } catch (error) {
       console.error("Error fetching real terrain data:", error);
+      alert("Satellite API request blocked or busy. Please try again.");
       return null;
     }
   };
@@ -27,11 +46,10 @@ const DepthMapping = () => {
     setLoading(true);
 
     try {
-      // 1. Fetch exact Z-axis data for the USER PROVIDED coordinates
+      // Fetch exact Z-axis data for the USER PROVIDED coordinates
       const realElevation = await fetchRealElevation(lat, lng);
 
       if (realElevation !== null) {
-        // 2. Output only 100% real data
         setResults({
           rawApiElevation: realElevation.toFixed(2), // Real NASA Z-Axis Elevation
         });
