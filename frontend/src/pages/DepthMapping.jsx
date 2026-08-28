@@ -2,16 +2,17 @@ import React, { useState } from 'react';
 import { Cuboid, AlertTriangle, Download, ArrowDownToLine, MapPin, Activity } from 'lucide-react';
 
 const DepthMapping = () => {
-  // NO DUMMY VALUES - Direct User Input for Coordinates
+  // Direct User Input for Coordinates (No Dummy Data)
   const [lat, setLat] = useState('');
   const [lng, setLng] = useState('');
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
 
-  // Function to fetch REAL Z-axis elevation data from NASA SRTM
+  // Function to fetch REAL Z-axis elevation data from NASA SRTM using a CORS Proxy
   const fetchRealElevation = async (latitude, longitude) => {
     try {
-      const response = await fetch(`https://api.opentopodata.org/v1/srtm30m?locations=${latitude},${longitude}`);
+      // Adding corsproxy.io to bypass browser security blocks during the hackathon demo
+      const response = await fetch(`https://corsproxy.io/?https://api.opentopodata.org/v1/srtm30m?locations=${latitude},${longitude}`);
       const data = await response.json();
       return data.results[0].elevation;
     } catch (error) {
