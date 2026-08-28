@@ -16,7 +16,7 @@ const DepthMapping = () => {
   // Fetch from your Render Backend
   const fetchRealElevation = async (latitude, longitude) => {
     try {
-      // Clean backend URL without Markdown brackets
+      // Clean backend URL
       const backendUrl = 'https://ai-mining.onrender.com';
 
       const response = await fetch(`${backendUrl}/api/elevation?lat=${latitude}&lng=${longitude}`);
@@ -95,7 +95,7 @@ const DepthMapping = () => {
         {loading && (
           <div className="z-10 text-center">
             <div className="w-16 h-16 border-4 border-[#0EA5E9]/20 border-t-[#0EA5E9] rounded-full animate-spin mx-auto mb-4 shadow-[0_0_20px_rgba(14,165,233,0.5)]" />
-            <p className="text-[#0EA5E9] font-mono text-xs">CALCULATING DELTA FROM NASA SRTM...</p>
+            <p className="text-[#0EA5E9] font-mono text-xs">CALCULATING DELTA FROM ESA COPERNICUS...</p>
           </div>
         )}
 
@@ -210,6 +210,13 @@ const DepthMapping = () => {
                   <span className="text-[10px] text-[#94A3B8] uppercase tracking-wider">Calculated Exact Z-Axis</span>
                   <span className={`font-bold font-mono text-2xl ${results.type.includes('Depth') ? 'text-[#38BDF8]' : 'text-[#F59E0B]'}`}>
                     {results.exactZAxis} Meters
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-center text-xs pt-2 border-t border-white/10 mt-2">
+                  <span className="text-[#94A3B8]">Data Source:</span>
+                  <span className="text-white font-mono bg-white/10 px-2 py-1 rounded">
+                    ESA Copernicus (LiDAR/Radar)
                   </span>
                 </div>
               </div>

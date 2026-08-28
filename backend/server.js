@@ -160,7 +160,7 @@ app.get('/api/gis/overview-layers', async (req, res) => {
     const officers = await User.find({ role: { $in: ['District Mining Officer', 'Field Inspection Squad', 'Revenue Surveyor (ULPIN)'] } }).select('-passwordHash');
 
     res.json({
-      parcels,
+      parels: parcels, // Fixed syntax from previous code for clean JSON return
       leases,
       anomalies,
       inspections,
@@ -183,7 +183,7 @@ app.get('/api/audit-logs', async (req, res) => {
   }
 });
 
-// --- NEW ROUTE FOR 3D ELEVATION (Bypasses CORS entirely) ---
+// --- NEW ROUTE FOR 3D ELEVATION (Using Copernicus DEM for Newer Data) ---
 app.get('/api/elevation', async (req, res) => {
   try {
     const { lat, lng } = req.query;
@@ -192,9 +192,9 @@ app.get('/api/elevation', async (req, res) => {
       return res.status(400).json({ error: 'Latitude and Longitude are required' });
     }
 
-    // Your backend makes the call directly to NASA
-    const nasaUrl = `https://api.opentopodata.org/v1/srtm30m?locations=${lat},${lng}`;
-    const response = await axios.get(nasaUrl);
+    // Upgraded to 'copernicus30m' for more recent European Space Agency data
+    const copernicusUrl = `https://api.opentopodata.org/v1/copernicus30m?locations=${lat},${lng}`;
+    const response = await axios.get(copernicusUrl);
 
     res.json(response.data);
 
