@@ -71,7 +71,7 @@ app.patch('/api/anomalies/:id/status', updateAnomalyStatus);
 app.patch('/api/anomalies/:id/assign', assignAnomalyOfficer);
 
 // ==============================================================
-// 🌟 SMART DEMO AI ROUTE (NEUTRAL LAND MEASUREMENT TOOL) 🌟
+// 🌟 SMART DEMO AI ROUTE (DYNAMIC GENERATOR WITH FIXES) 🌟
 // ==============================================================
 app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
   try {
@@ -103,7 +103,7 @@ app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
         boundary_polygon: [[40, 10], [80, 20], [90, 70], [60, 90], [30, 60]]
       }];
     }
-    // DYNAMIC GENERATOR FOR ANY OTHER RANDOM IMAGE
+    // DYNAMIC GENERATOR FOR ANY OTHER RANDOM IMAGE (LIKE safe_land.png)
     else {
       const fileLength = req.file.buffer.length;
       detectedArea = 2500 + (fileLength % 3000);
@@ -118,7 +118,7 @@ app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
       }];
     }
 
-    // Save extracted boundary to MongoDB (Neutral tags)
+    // Save extracted boundary to MongoDB
     const savedBoundaries = [];
     if (boundaryData && boundaryData.length > 0) {
       const defaultLease = await MiningLease.findOne();
@@ -128,7 +128,8 @@ app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
         const newRecord = new SurveillanceAnomaly({
           leaseId: validLeaseId,
           anomalyType: boundary.type,
-          severity: 'Info', // Neutral tag
+          // DB STRICT ENUM FIX: Schema expects 'Critical' and 'Pending_Inspection'
+          severity: 'Critical',
           aiConfidenceScore: boundary.confidence,
           aiModelVersion: 'AI-Boundary-Vision-v1',
           aiAnalysisLog: `Boundary measured from ${filename}.`,
@@ -141,7 +142,7 @@ app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
             coordinates: [[[78.65, 10.79], [78.66, 10.79], [78.66, 10.80], [78.65, 10.80], [78.65, 10.79]]]
           },
           breachAreaSqMeters: detectedArea,
-          status: 'Mapped_Successfully' // Neutral tag
+          status: 'Pending_Inspection'
         });
 
         const saved = await newRecord.save();
@@ -159,7 +160,7 @@ app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
 
   } catch (error) {
     console.error("AI Proxy Error:", error.message);
-    res.status(500).json({ error: "Failed to process image" });
+    res.status(500).json({ error: "Failed to process image", details: error.message });
   }
 });
 
