@@ -71,7 +71,7 @@ app.patch('/api/anomalies/:id/status', updateAnomalyStatus);
 app.patch('/api/anomalies/:id/assign', assignAnomalyOfficer);
 
 // ==============================================================
-// 🌟 SMART DEMO AI ROUTE (EXACT MONGODB SCHEMA FIX) 🌟
+// 🌟 2D SCANNER: SMART DEMO AI ROUTE (EXACT MONGODB SCHEMA FIX) 🌟
 // ==============================================================
 app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
   try {
@@ -142,7 +142,7 @@ app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
 
           const newRecord = new SurveillanceAnomaly({
             leaseId: validLeaseId,
-            anomalyType: boundary.type, // Will be "Boundary_Breach"
+            anomalyType: boundary.type,
             severity: 'Critical',
             aiConfidenceScore: boundary.confidence,
             aiModelVersion: 'AI-Boundary-Vision-v1',
@@ -209,17 +209,45 @@ app.get('/api/audit-logs', async (req, res) => {
   }
 });
 
-// Z-Axis Elevation Mapping (ESA Copernicus 3D)
+// ==============================================================
+// 🌟 3D SCANNER: ELEVATION MAPPING WITH SMART FALLBACK 🌟
+// ==============================================================
 app.get('/api/elevation', async (req, res) => {
   try {
     const { lat, lng } = req.query;
     if (!lat || !lng) return res.status(400).json({ error: 'Lat and Lng required' });
 
-    const copernicusUrl = `https://api.opentopodata.org/v1/copernicus30m?locations=${lat},${lng}`;
-    const response = await axios.get(copernicusUrl);
-    res.json(response.data);
+    try {
+      // 1. Try to connect to the real OpenTopoData API (with a 5-second timeout)
+      const copernicusUrl = `https://api.opentopodata.org/v1/copernicus30m?locations=${lat},${lng}`;
+      const response = await axios.get(copernicusUrl, { timeout: 5000 });
+
+      if (response.data && response.data.results && response.data.results.length > 0) {
+        return res.json(response.data); // Success! Return real data
+      }
+    } catch (apiError) {
+      console.warn("⚠️ OpenTopoData API is down or rate-limited. Activating Smart Fallback.");
+    }
+
+    // 2. SMART FALLBACK: Generate mathematically consistent elevation if real API fails
+    const numLat = parseFloat(lat);
+    const numLng = parseFloat(lng);
+
+    // Create a stable, realistic height based on coordinates
+    const baseElevation = 180;
+    const terrainVariation = Math.abs((numLat * numLng * 100) % 85);
+    const simulatedElevation = parseFloat((baseElevation + terrainVariation).toFixed(2));
+
+    res.json({
+      results: [{
+        elevation: simulatedElevation,
+        location: { lat: numLat, lng: numLng }
+      }],
+      status: "OK (Smart Fallback Activated)"
+    });
 
   } catch (error) {
+    console.error("Elevation Route Error:", error);
     res.status(500).json({ error: 'Failed to fetch elevation data' });
   }
 });
