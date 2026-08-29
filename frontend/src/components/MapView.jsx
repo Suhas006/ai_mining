@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, GeoJSON, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, GeoJSON, Marker, Popup, useMap, useMapEvents, ZoomControl } from 'react-leaflet';
 import L from 'leaflet';
 import { Search, MapPin, Layers, Globe, Compass, AlertTriangle, Eye, Download, Check, Sparkles } from 'lucide-react';
 
@@ -154,10 +154,10 @@ export default function MapView({ parcels = [], leases = [], anomalies = [], onS
   };
 
   return (
-    <div className="relative w-full h-[700px] bg-[#0B0F17] rounded-lg border border-[#1E293B] overflow-hidden flex flex-col md:flex-row shadow-2xl">
+    <div className="relative w-full h-full bg-[#0B0F17] rounded-[32px] border border-[#1E293B] overflow-hidden flex flex-col md:flex-row shadow-2xl">
       
       {/* TOP SEARCH & NAVIGATION BAR OVERLAY */}
-      <div className="absolute top-4 left-4 right-4 md:right-auto z-[1000] flex flex-col sm:flex-row items-stretch sm:items-center gap-3 max-w-3xl">
+      <div className="absolute top-4 left-16 right-4 md:right-auto z-[1000] flex flex-col sm:flex-row items-stretch sm:items-center gap-3 max-w-3xl">
         
         {/* Real-Time Location Search Box */}
         <div className="relative flex-1 bg-[#131B2B]/95 backdrop-blur-md border border-[#1E293B] rounded-lg shadow-2xl p-1.5 flex items-center">
@@ -320,27 +320,7 @@ export default function MapView({ parcels = [], leases = [], anomalies = [], onS
           Parcels ({parcels.length})
         </label>
 
-        <label className="flex items-center gap-1.5 text-[#94A3B8] cursor-pointer hover:text-white">
-          <input
-            type="checkbox"
-            checked={showLeases}
-            onChange={(e) => setShowLeases(e.target.checked)}
-            className="rounded accent-[#0EA5E9]"
-          />
-          <span className="w-2.5 h-2.5 rounded-full bg-[#0EA5E9]"></span>
-          Leases ({leases.length})
-        </label>
 
-        <label className="flex items-center gap-1.5 text-[#94A3B8] cursor-pointer hover:text-white">
-          <input
-            type="checkbox"
-            checked={showAnomalies}
-            onChange={(e) => setShowAnomalies(e.target.checked)}
-            className="rounded accent-[#EF4444]"
-          />
-          <span className="w-2.5 h-2.5 rounded-full bg-[#EF4444] animate-pulse"></span>
-          Anomalies ({anomalies.length})
-        </label>
 
         {/* Live Hover Coords Display */}
         <div className="font-mono text-[11px] text-[#0EA5E9] bg-[#0B0F17] px-2.5 py-1 rounded border border-[#1E293B] ml-auto">
@@ -354,8 +334,10 @@ export default function MapView({ parcels = [], leases = [], anomalies = [], onS
           center={[defaultLat, defaultLng]}
           zoom={13}
           scrollWheelZoom={true}
+          zoomControl={false}
           style={{ height: '100%', width: '100%' }}
         >
+          <ZoomControl position="topright" />
           {/* Smooth Fly-To Controller */}
           <MapFlyController targetLocation={flyTarget} targetZoom={flyZoom} />
 
@@ -423,191 +405,10 @@ export default function MapView({ parcels = [], leases = [], anomalies = [], onS
             </React.Fragment>
           ))}
 
-          {/* Mining Leases GeoJSON Layer */}
-          {showLeases && leases.map((lease) => (
-            <React.Fragment key={`lease-${lease._id}`}>
-              {lease.leasePolygon && (
-                <GeoJSON
-                  data={lease.leasePolygon}
-                  style={leaseStyle}
-                  eventHandlers={{
-                    click: () => setSelectedItem({ type: 'lease', data: lease })
-                  }}
-                />
-              )}
-            </React.Fragment>
-          ))}
 
-          {/* Surveillance Breach Anomalies GeoJSON Layer */}
-          {showAnomalies && anomalies.map((anomaly) => {
-            const coords = anomaly.detectedCoordinates?.coordinates;
-            const lat = coords ? coords[1] : defaultLat;
-            const lng = coords ? coords[0] : defaultLng;
-
-            return (
-              <React.Fragment key={`anomaly-${anomaly._id}`}>
-                {anomaly.infringingPolygon && (
-                  <GeoJSON
-                    data={anomaly.infringingPolygon}
-                    style={anomalyStyle}
-                    eventHandlers={{
-                      click: () => {
-                        setSelectedItem({ type: 'anomaly', data: anomaly });
-                        onSelectAnomaly(anomaly);
-                      }
-                    }}
-                  />
-                )}
-                <Marker
-                  position={[lat, lng]}
-                  icon={alertIcon}
-                >
-                  <Popup>
-                    <div className="p-1 space-y-2 text-xs">
-                      <div className="font-bold text-[#EF4444] flex items-center gap-1">
-                        <AlertTriangle className="w-3.5 h-3.5" />
-                        AI DETECTED BREACH ({anomaly.severity})
-                      </div>
-                      <div className="text-[#94A3B8]">{anomaly.aiAnalysisLog}</div>
-                      <div className="font-mono text-white text-[11px]">
-                        Illegal Area: <span className="text-[#EF4444] font-bold">{anomaly.breachAreaSqMeters} sq.m</span>
-                      </div>
-                      <div className="flex items-center gap-2 pt-1">
-                        <button
-                          onClick={() => onSelectAnomaly(anomaly)}
-                          className="bg-[#EF4444] text-white px-2 py-1 rounded text-[10px] font-medium hover:bg-[#DC2626]"
-                        >
-                          Triage Case
-                        </button>
-                        <button
-                          onClick={() => onGeneratePDF(anomaly._id)}
-                          className="bg-[#1E293B] text-[#0EA5E9] border border-[#0EA5E9]/30 px-2 py-1 rounded text-[10px] font-medium hover:bg-[#0EA5E9]/20"
-                        >
-                          Download Notice
-                        </button>
-                      </div>
-                    </div>
-                  </Popup>
-                </Marker>
-              </React.Fragment>
-            );
-          })}
         </MapContainer>
       </div>
 
-      {/* Right Drawer: Selected Feature Detail Panel */}
-      <div className="w-full md:w-80 bg-[#131B2B] border-t md:border-t-0 md:border-l border-[#1E293B] p-4 flex flex-col justify-between overflow-y-auto">
-        {selectedItem ? (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between border-b border-[#1E293B] pb-2">
-              <span className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">Spatial Feature Inspector</span>
-              <button
-                onClick={() => setSelectedItem(null)}
-                className="text-xs text-[#94A3B8] hover:text-white"
-              >
-                ✕ Close
-              </button>
-            </div>
-
-            {selectedItem.type === 'parcel' && (
-              <div className="space-y-3">
-                <div className="bg-[#10B981]/10 border border-[#10B981]/30 p-2.5 rounded-md">
-                  <span className="text-[10px] text-[#10B981] font-bold uppercase tracking-wider block">ULPIN LAND PARCEL</span>
-                  <p className="font-mono text-sm font-bold text-white mt-1">{selectedItem.data.ulpin}</p>
-                </div>
-                <div className="text-xs space-y-2 text-[#94A3B8]">
-                  <div><strong className="text-white">Owner:</strong> {selectedItem.data.ownerName}</div>
-                  <div><strong className="text-white">Survey No:</strong> {selectedItem.data.surveyNumber}</div>
-                  <div><strong className="text-white">Area:</strong> {selectedItem.data.areaAcres} Acres</div>
-                  <div><strong className="text-white">Registered:</strong> {new Date(selectedItem.data.createdAt).toLocaleDateString()}</div>
-                  <div>
-                    <strong className="text-white block mb-1">Centroid Coords:</strong>
-                    <code className="bg-[#0B0F17] px-2 py-1 rounded text-[#0EA5E9] font-mono text-[11px] block">
-                      [{selectedItem.data.centroid?.coordinates[0].toFixed(5)}, {selectedItem.data.centroid?.coordinates[1].toFixed(5)}]
-                    </code>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {selectedItem.type === 'lease' && (
-              <div className="space-y-3">
-                <div className="bg-[#0EA5E9]/10 border border-[#0EA5E9]/30 p-2.5 rounded-md">
-                  <span className="text-[10px] text-[#0EA5E9] font-bold uppercase tracking-wider block">MINING LEASE PERIMETER</span>
-                  <p className="font-mono text-sm font-bold text-white mt-1">{selectedItem.data.leaseId}</p>
-                </div>
-                <div className="text-xs space-y-2 text-[#94A3B8]">
-                  <div><strong className="text-white">Holder:</strong> {selectedItem.data.leaseHolderName}</div>
-                  <div><strong className="text-white">Mineral:</strong> {selectedItem.data.mineralType}</div>
-                  <div><strong className="text-white">Permitted Cap:</strong> {selectedItem.data.permittedVolumeMetricTons?.toLocaleString()} Metric Tons</div>
-                  <div><strong className="text-white">Buffer Tolerance:</strong> {selectedItem.data.bufferMeters} meters</div>
-                  <div>
-                    <strong className="text-white">Status:</strong>{' '}
-                    <span className="bg-[#10B981]/20 text-[#10B981] text-[10px] px-2 py-0.5 rounded">
-                      {selectedItem.data.status}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {selectedItem.type === 'anomaly' && (
-              <div className="space-y-3">
-                <div className="bg-[#EF4444]/10 border border-[#EF4444]/30 p-2.5 rounded-md">
-                  <span className="text-[10px] text-[#EF4444] font-bold uppercase tracking-wider block">SURVEILLANCE BREACH ANOMALY</span>
-                  <p className="font-mono text-sm font-bold text-white mt-1">{selectedItem.data.anomalyType}</p>
-                </div>
-                <div className="text-xs space-y-2 text-[#94A3B8]">
-                  <div><strong className="text-white">Severity:</strong> <span className="text-[#EF4444] font-bold">{selectedItem.data.severity}</span></div>
-                  <div><strong className="text-white">Illegal Area:</strong> <span className="font-mono text-white font-bold">{selectedItem.data.breachAreaSqMeters} sq.m</span></div>
-                  <div><strong className="text-white">AI Confidence:</strong> {(selectedItem.data.aiConfidenceScore * 100).toFixed(0)}% ({selectedItem.data.aiModelVersion})</div>
-                  <div><strong className="text-white">AI Finding:</strong> {selectedItem.data.aiAnalysisLog}</div>
-                </div>
-
-                <div className="pt-2 flex flex-col gap-2">
-                  <button
-                    onClick={() => onSelectAnomaly(selectedItem.data)}
-                    className="w-full bg-[#EF4444] hover:bg-[#DC2626] text-white text-xs font-bold py-2 px-3 rounded flex items-center justify-center gap-1.5"
-                  >
-                    <AlertTriangle className="w-3.5 h-3.5" />
-                    Open Anomaly Triage Queue
-                  </button>
-                  <button
-                    onClick={() => onGeneratePDF(selectedItem.data._id)}
-                    className="w-full bg-[#1E293B] hover:bg-[#334155] text-[#0EA5E9] border border-[#0EA5E9]/30 text-xs font-bold py-2 px-3 rounded flex items-center justify-center gap-1.5"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    Download Legal Breach Notice (PDF)
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="h-full flex flex-col items-center justify-center text-center p-4 text-[#94A3B8]">
-            <Eye className="w-10 h-10 text-[#0EA5E9]/40 mb-3 animate-pulse" />
-            <h3 className="text-xs font-bold text-white uppercase tracking-wider">Real Satellite GIS Inspector</h3>
-            <p className="text-[11px] mt-1">Use the search bar at the top to fly to ANY city or quarry location, or click any shape on the satellite map to inspect.</p>
-          </div>
-        )}
-
-        {/* Legend */}
-        <div className="mt-4 pt-3 border-t border-[#1E293B] text-[11px] space-y-1.5 text-[#94A3B8]">
-          <div className="font-bold text-white uppercase text-[10px] tracking-wider mb-1">Satellite Layer Legend</div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-sm bg-[#10B981]"></span>
-            <span>Land Parcels (ULPIN Registered)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-sm bg-[#0EA5E9]"></span>
-            <span>Mining Leases (Legal Boundaries)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-sm bg-[#EF4444] animate-pulse"></span>
-            <span>AI Flagged Breach (Infringing AOI)</span>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

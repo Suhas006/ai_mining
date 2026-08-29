@@ -68,9 +68,9 @@ const BoundaryScanner = ({ parcels, leases, anomalies, onSelectAnomaly, onGenera
   };
 
   return (
-    <div className="flex w-full h-full p-4 gap-4 bg-[#0B0F17]">
+    <div className="flex w-full h-full p-2 gap-2 bg-[#0B0F17]">
       {/* 80% Map View */}
-      <div className="flex-[4] h-full rounded-xl overflow-hidden shadow-2xl border border-[#1E293B]">
+      <div className="flex-[4] h-full rounded-[32px] overflow-hidden shadow-2xl border border-[#1E293B]">
         <MapView
           parcels={parcels}
           leases={leases}

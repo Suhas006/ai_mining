@@ -71,7 +71,7 @@ app.patch('/api/anomalies/:id/status', updateAnomalyStatus);
 app.patch('/api/anomalies/:id/assign', assignAnomalyOfficer);
 
 // ==============================================================
-// 🌟 SMART DEMO AI ROUTE (DYNAMIC POLYGON LOCATION FIX) 🌟
+// 🌟 SMART DEMO AI ROUTE (EXACT MONGODB SCHEMA FIX) 🌟
 // ==============================================================
 app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
   try {
@@ -87,7 +87,7 @@ app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
     if (filename.includes('karur') || filename.includes('image_1')) {
       detectedArea = 4850;
       boundaryData = [{
-        type: "Suspected_Encroachment",
+        type: "Boundary_Breach", // EXACT SCHEMA MATCH
         confidence: 0.94,
         location: { lat: 10.9598, lng: 77.9128 },
         boundary_polygon: [[20, 30], [60, 25], [75, 50], [45, 80], [15, 60]]
@@ -97,7 +97,7 @@ app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
     else if (filename.includes('salem') || filename.includes('image_2')) {
       detectedArea = 8240;
       boundaryData = [{
-        type: "Suspected_Encroachment",
+        type: "Boundary_Breach", // EXACT SCHEMA MATCH
         confidence: 0.97,
         location: { lat: 11.6643, lng: 78.1460 },
         boundary_polygon: [[40, 10], [80, 20], [90, 70], [60, 90], [30, 60]]
@@ -112,7 +112,7 @@ app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
       const confidenceScore = ((85 + (fileLength % 14)) / 100).toFixed(2);
 
       boundaryData = [{
-        type: "Suspected_Encroachment",
+        type: "Boundary_Breach", // EXACT SCHEMA MATCH
         confidence: parseFloat(confidenceScore),
         location: { lat: 11.0168, lng: 76.9558 }, // Default to Coimbatore if random
         boundary_polygon: [[25 + shiftX, 35 + shiftY], [65 + shiftX, 30 + shiftY], [75 + shiftX, 65 + shiftY], [55 + shiftX, 80 + shiftY], [20 + shiftX, 70 + shiftY]]
@@ -142,18 +142,18 @@ app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
 
           const newRecord = new SurveillanceAnomaly({
             leaseId: validLeaseId,
-            anomalyType: boundary.type,
+            anomalyType: boundary.type, // Will be "Boundary_Breach"
             severity: 'Critical',
             aiConfidenceScore: boundary.confidence,
             aiModelVersion: 'AI-Boundary-Vision-v1',
             aiAnalysisLog: `Boundary measured from ${filename}.`,
             detectedCoordinates: {
               type: 'Point',
-              coordinates: [centerLng, centerLat]
+              coordinates: [centerLng, centerLat] // GeoJSON is [lng, lat]
             },
             infringingPolygon: {
               type: 'Polygon',
-              coordinates: dynamicPolygon // 🌟 This will now place the red box exactly where the camera flies!
+              coordinates: dynamicPolygon
             },
             breachAreaSqMeters: detectedArea,
             status: 'Pending_Inspection'
@@ -162,7 +162,7 @@ app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
           const saved = await newRecord.save();
           savedBoundaries.push(saved);
         } catch (dbError) {
-          console.error("MongoDB Save Error (Validation Failed):", dbError.message);
+          console.error("MongoDB Save Error:", dbError.message);
         }
       }
     }
