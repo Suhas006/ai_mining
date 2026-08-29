@@ -34,30 +34,36 @@ const BoundaryScanner = ({ parcels, leases, anomalies, onSelectAnomaly, onGenera
     formData.append('file', file);
 
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/ai/analyze-raster`, formData, {
+      // Pointing directly to your Render backend to avoid proxy issues
+      const backendUrl = import.meta.env.VITE_API_BASE_URL || 'https://ai-mining.onrender.com';
+
+      const response = await axios.post(`${backendUrl}/api/ai/analyze-raster`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      // Simulation of dummy results matching user request
-      setTimeout(() => {
-        setResults({
-          confidence: 94.5,
-          area: 4850
-        });
-        if (fetchLayers) fetchLayers();
-        setLoading(false);
-      }, 1500);
+      // 🌟 GETTING REAL DATA FROM BACKEND INSTEAD OF DUMMY NUMBERS 🌟
+      const backendData = response.data;
+      const realArea = backendData.detected_area || 0;
+
+      let realConfidence = 0;
+      if (backendData.anomalies && backendData.anomalies.length > 0) {
+        realConfidence = (backendData.anomalies[0].confidence * 100).toFixed(1);
+      } else {
+        realConfidence = 99.9; // Safe land confidence
+      }
+
+      setResults({
+        confidence: realConfidence,
+        area: realArea
+      });
+
+      if (fetchLayers) fetchLayers();
+      setLoading(false);
 
     } catch (error) {
       console.error("Upload failed:", error);
-      // Even if it fails (due to dummy file etc.), show dummy results for demo purposes
-      setTimeout(() => {
-        setResults({
-          confidence: 94.5,
-          area: 4850
-        });
-        setLoading(false);
-      }, 1500);
+      alert("Scan failed. Check if backend is running.");
+      setLoading(false);
     }
   };
 
@@ -77,20 +83,20 @@ const BoundaryScanner = ({ parcels, leases, anomalies, onSelectAnomaly, onGenera
       {/* 20% Control Panel */}
       <div className="flex-[1] h-full bg-[#131B2B] rounded-xl border border-[#1E293B] shadow-2xl p-5 flex flex-col overflow-y-auto">
         <h2 className="text-white font-bold text-lg mb-1">2D AI Scanner</h2>
-        <p className="text-xs text-[#94A3B8] mb-6">Analyze raster imagery for unpermitted boundary expansions.</p>
+        <p className="text-xs text-[#94A3B8] mb-6">Analyze raster imagery for automated land boundary extraction.</p>
 
         {/* Upload Zone */}
-        <div 
+        <div
           className="border-2 border-dashed border-[#1E293B] hover:border-[#0EA5E9] bg-[#0B0F17] rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-colors mb-4"
           onDragOver={handleDragOver}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
         >
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            className="hidden" 
-            onChange={handleFileChange} 
+          <input
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            onChange={handleFileChange}
             accept="image/*"
           />
           <UploadCloud className={`w-8 h-8 mb-3 ${file ? 'text-[#10B981]' : 'text-[#0EA5E9]'}`} />
@@ -103,7 +109,7 @@ const BoundaryScanner = ({ parcels, leases, anomalies, onSelectAnomaly, onGenera
         </div>
 
         {/* Scan Button */}
-        <button 
+        <button
           onClick={handleScan}
           disabled={!file || loading}
           className="w-full bg-gradient-to-r from-[#0EA5E9] to-[#2563EB] hover:from-[#38BDF8] hover:to-[#3B82F6] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(14,165,233,0.3)] transition-all mb-6"
@@ -116,7 +122,7 @@ const BoundaryScanner = ({ parcels, leases, anomalies, onSelectAnomaly, onGenera
           {loading ? 'Analyzing Raster...' : 'Scan Image'}
         </button>
 
-        {/* Dummy Results Section */}
+        {/* REAL Results Section */}
         {results && (
           <div className="mt-2 mb-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="bg-[#10B981]/10 border border-[#10B981]/30 rounded-lg p-4 space-y-3">
@@ -134,7 +140,7 @@ const BoundaryScanner = ({ parcels, leases, anomalies, onSelectAnomaly, onGenera
                 </div>
               </div>
               <div className="flex justify-between text-xs pt-2 border-t border-[#10B981]/20">
-                <span className="text-[#94A3B8]">Detected Area:</span>
+                <span className="text-[#94A3B8]">Calculated Area:</span>
                 <span className="text-[#EF4444] font-bold font-mono">{results.area} sq meters</span>
               </div>
             </div>
@@ -143,12 +149,12 @@ const BoundaryScanner = ({ parcels, leases, anomalies, onSelectAnomaly, onGenera
 
         {/* Bottom Action Button */}
         <div className="mt-6 pt-4 border-t border-[#1E293B]">
-          <button 
+          <button
             disabled={!results}
             className="w-full bg-[#1E293B] hover:bg-[#334155] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-all border border-[#334155]"
           >
             <UserCheck className="w-4 h-4 text-[#10B981]" />
-            Assign to Field Officer
+            Assign to Surveyor
           </button>
         </div>
       </div>
