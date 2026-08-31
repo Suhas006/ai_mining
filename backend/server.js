@@ -24,7 +24,7 @@ const User = require('./models/User');
 const AuditLog = require('./models/AuditLog');
 
 // GIS & Vision Engines
-const ExifReader = require('exifreader');
+const exifr = require('exifr');
 const turf = require('@turf/turf');
 const Tesseract = require('tesseract.js');
 const Jimp = require('jimp');
@@ -77,7 +77,7 @@ app.patch('/api/anomalies/:id/status', updateAnomalyStatus);
 app.patch('/api/anomalies/:id/assign', assignAnomalyOfficer);
 
 // ==============================================================
-// 🌟 2D SCANNER: MOBILE XMP/EXIF & OCR CADASTRAL PIPELINE 🌟
+// 🌟 2D SCANNER: EXIFR MOBILE GPS & OCR CADASTRAL PIPELINE 🌟
 // ==============================================================
 app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
   try {
@@ -90,16 +90,16 @@ app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
     let centerLng = null;
     let extractionMethod = null;
 
-    // 1. MOBILE XMP & EXIF EXTRACTION (Supports modern phone photos)
+    // 1. NATIVE MOBILE GPS EXTRACTION (Android & iOS via exifr)
     try {
-      const tags = ExifReader.load(imageBuffer);
-      if (tags['GPSLatitude'] && tags['GPSLongitude']) {
-        centerLat = parseFloat(tags['GPSLatitude'].description);
-        centerLng = parseFloat(tags['GPSLongitude'].description);
-        extractionMethod = 'Mobile_EXIF_XMP';
+      const gps = await exifr.gps(imageBuffer);
+      if (gps && typeof gps.latitude === 'number' && typeof gps.longitude === 'number') {
+        centerLat = gps.latitude;
+        centerLng = gps.longitude;
+        extractionMethod = 'Mobile_EXIFR_GPS';
       }
     } catch (exifError) {
-      console.log("ExifReader extraction skipped:", exifError.message);
+      console.log("exifr GPS extraction skipped:", exifError.message);
     }
 
     // 2. OCR EXTRACTION WITH PRE-PROCESSING (Fallback for screenshot/text captures)
@@ -127,7 +127,7 @@ app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
     if (!centerLat || !centerLng) {
       return res.status(400).json({
         error: "Geospatial Data Missing",
-        details: "The system could not detect valid EXIF metadata or readable GPS text in this image. Please upload an original camera photo with location services enabled."
+        details: "The system could not detect valid GPS coordinates in this image. Please ensure location services were enabled when capturing the photo."
       });
     }
 
