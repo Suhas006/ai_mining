@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { UploadCloud, Scan, AlertTriangle, ShieldCheck, Image as ImageIcon, MapPin } from 'lucide-react';
+import { UploadCloud, Scan, AlertTriangle, Image as ImageIcon } from 'lucide-react';
 
 const Scanner2D = ({ onScanSuccess }) => {
     const [selectedFile, setSelectedFile] = useState(null);
@@ -27,7 +27,7 @@ const Scanner2D = ({ onScanSuccess }) => {
             const formData = new FormData();
             formData.append('file', selectedFile);
 
-            const backendUrl = 'https://ai-mining.onrender.com';
+            const backendUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
             const response = await fetch(`${backendUrl}/api/ai/analyze-raster`, {
                 method: 'POST',
                 body: formData,
@@ -38,7 +38,7 @@ const Scanner2D = ({ onScanSuccess }) => {
 
             setResults(data);
 
-            // Pass temporary session data up to parent component
+            // 🌟 Send data up to App.jsx session state immediately
             if (onScanSuccess && data.anomalies && data.anomalies.length > 0) {
                 onScanSuccess(data.anomalies[0]);
             }

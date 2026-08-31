@@ -27,6 +27,9 @@ export default function App() {
   const [officers, setOfficers] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // 🌟 NEW: Session state for temporary scanned boundaries (clears on refresh)
+  const [sessionScannedBoundaries, setSessionScannedBoundaries] = useState([]);
+
   // Modals
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [isAIOpen, setIsAIOpen] = useState(false);
@@ -63,33 +66,6 @@ export default function App() {
     fetchLayers();
   }, []);
 
-  const handleUpdateAnomalyStatus = async (id, status) => {
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/anomalies/${id}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status })
-      });
-      if (res.ok) fetchLayers();
-    } catch (err) {
-      console.error('Status update failed:', err);
-    }
-  };
-
-  const handleAssignOfficer = async (id, officerId) => {
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/anomalies/${id}/assign`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ officerId })
-      });
-      if (res.ok) fetchLayers();
-    } catch (err) {
-      console.error('Officer assignment failed:', err);
-    }
-  };
-
-
   return (
     <BrowserRouter>
       <div className="flex h-screen w-full bg-[#0B0F17] overflow-hidden font-sans text-slate-200">
@@ -104,6 +80,8 @@ export default function App() {
                   parcels={parcels}
                   leases={leases}
                   anomalies={anomalies}
+                  // 🌟 Pass session scanned boundaries into your main map view
+                  sessionScannedBoundaries={sessionScannedBoundaries}
                   onSelectAnomaly={(anomaly) => {
                     setSelectedAnomalyForPDF(anomaly);
                   }}
@@ -121,12 +99,19 @@ export default function App() {
             />
             <Route
               path="/scanner-2d"
-              element={<Scanner2D />}
+              element={
+                <Scanner2D
+                  // 🌟 Save scan results directly to session state
+                  onScanSuccess={(newBoundary) => {
+                    setSessionScannedBoundaries(prev => [...prev, newBoundary]);
+                  }}
+                />
+              }
             />
           </Routes>
         </div>
 
-        {/* Preserved Existing Modals for backend integration */}
+        {/* Preserved Existing Modals */}
         <AuthModal
           isOpen={isAuthOpen}
           onClose={() => setIsAuthOpen(false)}

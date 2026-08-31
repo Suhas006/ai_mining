@@ -3,7 +3,7 @@ import MapView from '../components/MapView';
 import { UploadCloud, CheckCircle, Search, UserCheck } from 'lucide-react';
 import axios from 'axios';
 
-const BoundaryScanner = ({ parcels, leases, anomalies, onSelectAnomaly, onGeneratePDF, fetchLayers }) => {
+const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries, onSelectAnomaly, onGeneratePDF, fetchLayers }) => {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
@@ -34,14 +34,12 @@ const BoundaryScanner = ({ parcels, leases, anomalies, onSelectAnomaly, onGenera
     formData.append('file', file);
 
     try {
-      // Pointing directly to your Render backend to avoid proxy issues
       const backendUrl = import.meta.env.VITE_API_BASE_URL || 'https://ai-mining.onrender.com';
 
       const response = await axios.post(`${backendUrl}/api/ai/analyze-raster`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      // 🌟 GETTING REAL DATA FROM BACKEND INSTEAD OF DUMMY NUMBERS 🌟
       const backendData = response.data;
       const realArea = backendData.detected_area || 0;
 
@@ -49,7 +47,7 @@ const BoundaryScanner = ({ parcels, leases, anomalies, onSelectAnomaly, onGenera
       if (backendData.anomalies && backendData.anomalies.length > 0) {
         realConfidence = (backendData.anomalies[0].confidence * 100).toFixed(1);
       } else {
-        realConfidence = 99.9; // Safe land confidence
+        realConfidence = 99.9;
       }
 
       setResults({
@@ -62,19 +60,20 @@ const BoundaryScanner = ({ parcels, leases, anomalies, onSelectAnomaly, onGenera
 
     } catch (error) {
       console.error("Upload failed:", error);
-      alert("Scan failed. Check if backend is running.");
+      alert(error.response?.data?.details || "Scan failed. Ensure you uploaded an image with valid GPS metadata or text.");
       setLoading(false);
     }
   };
 
   return (
     <div className="flex w-full h-full p-2 gap-2 bg-[#0B0F17]">
-      {/* 80% Map View */}
+      {/* 80% Map View - Now passes sessionScannedBoundaries to draw red polygons dynamically */}
       <div className="flex-[4] h-full rounded-[32px] overflow-hidden shadow-2xl border border-[#1E293B]">
         <MapView
           parcels={parcels}
           leases={leases}
           anomalies={anomalies}
+          scannedBoundaries={sessionScannedBoundaries}
           onSelectAnomaly={onSelectAnomaly}
           onGeneratePDF={onGeneratePDF}
         />
@@ -122,7 +121,7 @@ const BoundaryScanner = ({ parcels, leases, anomalies, onSelectAnomaly, onGenera
           {loading ? 'Analyzing Raster...' : 'Scan Image'}
         </button>
 
-        {/* REAL Results Section */}
+        {/* Results Section */}
         {results && (
           <div className="mt-2 mb-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="bg-[#10B981]/10 border border-[#10B981]/30 rounded-lg p-4 space-y-3">
