@@ -29,17 +29,24 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
 
     setLoading(true);
 
-    // 🌟 Capture live mobile browser GPS as a foolproof backup
+    // 🌟 Force high-accuracy mobile browser GPS capture
     let browserLat = null;
     let browserLng = null;
-    try {
-      const position = await new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
-      });
-      browserLat = position.coords.latitude;
-      browserLng = position.coords.longitude;
-    } catch (err) {
-      console.log("Browser geolocation unavailable, relying on image metadata.");
+
+    if (navigator.geolocation) {
+      try {
+        const position = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+          });
+        });
+        browserLat = position.coords.latitude;
+        browserLng = position.coords.longitude;
+      } catch (err) {
+        console.warn("Geolocation permission denied or unavailable:", err.message);
+      }
     }
 
     const formData = new FormData();
@@ -80,7 +87,7 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
 
     } catch (error) {
       console.error("Upload failed:", error);
-      alert(error.response?.data?.details || "Scan failed.");
+      alert(error.response?.data?.details || "Scan failed. Check network connection.");
       setLoading(false);
     }
   };
