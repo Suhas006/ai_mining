@@ -3,7 +3,7 @@ import MapView from '../components/MapView';
 import { UploadCloud, CheckCircle, Search, UserCheck } from 'lucide-react';
 import axios from 'axios';
 
-const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries, onSelectAnomaly, onGeneratePDF, fetchLayers }) => {
+const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries, onScanSuccess, onSelectAnomaly, onGeneratePDF, fetchLayers }) => {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
@@ -55,19 +55,24 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
         area: realArea
       });
 
+      // 🌟 THIS TRIGGERS THE MAP TO RENDER THE RED POLYGON INSTANTLY 🌟
+      if (onScanSuccess && backendData.anomalies && backendData.anomalies.length > 0) {
+        onScanSuccess(backendData.anomalies[0]);
+      }
+
       if (fetchLayers) fetchLayers();
       setLoading(false);
 
     } catch (error) {
       console.error("Upload failed:", error);
-      alert(error.response?.data?.details || "Scan failed. Ensure you uploaded an image with valid GPS metadata or text.");
+      alert(error.response?.data?.details || "Scan failed. Ensure your image has valid GPS metadata or text.");
       setLoading(false);
     }
   };
 
   return (
     <div className="flex w-full h-full p-2 gap-2 bg-[#0B0F17]">
-      {/* 80% Map View - Now passes sessionScannedBoundaries to draw red polygons dynamically */}
+      {/* 80% Map View */}
       <div className="flex-[4] h-full rounded-[32px] overflow-hidden shadow-2xl border border-[#1E293B]">
         <MapView
           parcels={parcels}

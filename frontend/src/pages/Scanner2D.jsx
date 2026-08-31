@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { UploadCloud, Scan, AlertTriangle, Image as ImageIcon } from 'lucide-react';
 
 const Scanner2D = ({ onScanSuccess }) => {
@@ -8,6 +9,7 @@ const Scanner2D = ({ onScanSuccess }) => {
     const [results, setResults] = useState(null);
 
     const fileInputRef = useRef(null);
+    const navigate = useNavigate();
 
     const handleFileChange = (event) => {
         const file = event.target.files[0];
@@ -27,7 +29,7 @@ const Scanner2D = ({ onScanSuccess }) => {
             const formData = new FormData();
             formData.append('file', selectedFile);
 
-            const backendUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+            const backendUrl = import.meta.env.VITE_API_BASE_URL || 'https://ai-mining.onrender.com';
             const response = await fetch(`${backendUrl}/api/ai/analyze-raster`, {
                 method: 'POST',
                 body: formData,
@@ -38,10 +40,13 @@ const Scanner2D = ({ onScanSuccess }) => {
 
             setResults(data);
 
-            // 🌟 Send data up to App.jsx session state immediately
             if (onScanSuccess && data.anomalies && data.anomalies.length > 0) {
                 onScanSuccess(data.anomalies[0]);
             }
+
+            setTimeout(() => {
+                navigate('/');
+            }, 1000);
 
         } catch (error) {
             console.error("AI Scan Error:", error);
