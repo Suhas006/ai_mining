@@ -24,7 +24,7 @@ const User = require('./models/User');
 const AuditLog = require('./models/AuditLog');
 
 // GIS & Vision Engines
-const ExifParser = require('exif-parser');
+const ExifReader = require('exifreader');
 const turf = require('@turf/turf');
 const Tesseract = require('tesseract.js');
 const Jimp = require('jimp');
@@ -77,7 +77,7 @@ app.patch('/api/anomalies/:id/status', updateAnomalyStatus);
 app.patch('/api/anomalies/:id/assign', assignAnomalyOfficer);
 
 // ==============================================================
-// 🌟 2D SCANNER: STRICT CADASTRE PIPELINE (ZERO FAKE DATA) 🌟
+// 🌟 2D SCANNER: MOBILE XMP/EXIF & OCR CADASTRAL PIPELINE 🌟
 // ==============================================================
 app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
   try {
@@ -90,18 +90,19 @@ app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
     let centerLng = null;
     let extractionMethod = null;
 
-    // 1. EXIF EXTRACTION (For real, uncompressed drone/smartphone photos)
+    // 1. MOBILE XMP & EXIF EXTRACTION (Supports modern phone photos)
     try {
-      const parser = ExifParser.create(imageBuffer);
-      const result = parser.parse();
-      if (result.tags && result.tags.GPSLatitude && result.tags.GPSLongitude) {
-        centerLat = result.tags.GPSLatitude;
-        centerLng = result.tags.GPSLongitude;
-        extractionMethod = 'EXIF_Metadata';
+      const tags = ExifReader.load(imageBuffer);
+      if (tags['GPSLatitude'] && tags['GPSLongitude']) {
+        centerLat = parseFloat(tags['GPSLatitude'].description);
+        centerLng = parseFloat(tags['GPSLongitude'].description);
+        extractionMethod = 'Mobile_EXIF_XMP';
       }
-    } catch (exifError) { }
+    } catch (exifError) {
+      console.log("ExifReader extraction skipped:", exifError.message);
+    }
 
-    // 2. OCR EXTRACTION WITH PRE-PROCESSING (For GPS Camera photos)
+    // 2. OCR EXTRACTION WITH PRE-PROCESSING (Fallback for screenshot/text captures)
     if (!centerLat || !centerLng) {
       try {
         const image = await Jimp.read(imageBuffer);
