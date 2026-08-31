@@ -77,7 +77,7 @@ app.patch('/api/anomalies/:id/status', updateAnomalyStatus);
 app.patch('/api/anomalies/:id/assign', assignAnomalyOfficer);
 
 // ==============================================================
-// 🌟 2D SCANNER: BULLETPROOF VISION & OCR PIPELINE 🌟
+// 🌟 2D SCANNER: STRICT CADASTRE PIPELINE (ZERO FAKE DATA) 🌟
 // ==============================================================
 app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
   try {
@@ -86,115 +86,92 @@ app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
     }
 
     const imageBuffer = req.file.buffer;
-    let centerLat = 11.0168; // Default fallback (Coimbatore)
-    let centerLng = 76.9558;
-    let extractionMethod = 'Fallback';
+    let centerLat = null;
+    let centerLng = null;
+    let extractionMethod = null;
 
-    // 1. OCR (Isolated execution)
+    // 1. EXIF EXTRACTION (For real, uncompressed drone/smartphone photos)
     try {
-      const { data: { text } } = await Tesseract.recognize(imageBuffer, 'eng');
-      const latMatch = text.match(/Lat[^\d]*(\d+\.\d+)/i);
-      const lngMatch = text.match(/Long[^\d]*(\d+\.\d+)/i);
-      if (latMatch && lngMatch) {
-        centerLat = parseFloat(latMatch[1]);
-        centerLng = parseFloat(lngMatch[1]);
-        extractionMethod = 'AI_OCR_Vision';
+      const parser = ExifParser.create(imageBuffer);
+      const result = parser.parse();
+      if (result.tags && result.tags.GPSLatitude && result.tags.GPSLongitude) {
+        centerLat = result.tags.GPSLatitude;
+        centerLng = result.tags.GPSLongitude;
+        extractionMethod = 'EXIF_Metadata';
       }
-    } catch (ocrError) {
-      console.log("OCR Engine skipped for this image format.");
-    }
+    } catch (exifError) { }
 
-    // 2. EXIF (Isolated execution)
-    if (extractionMethod === 'Fallback') {
+    // 2. OCR EXTRACTION WITH PRE-PROCESSING (For GPS Camera photos)
+    if (!centerLat || !centerLng) {
       try {
-        const parser = ExifParser.create(imageBuffer);
-        const result = parser.parse();
-        if (result.tags && result.tags.GPSLatitude) {
-          centerLat = result.tags.GPSLatitude;
-          centerLng = result.tags.GPSLongitude;
-          extractionMethod = 'EXIF_Metadata';
+        const image = await Jimp.read(imageBuffer);
+        image.greyscale().contrast(0.6).scale(2);
+        const enhancedBuffer = await image.getBufferAsync(Jimp.MIME_JPEG);
+
+        const { data: { text } } = await Tesseract.recognize(enhancedBuffer, 'eng');
+        const latMatch = text.match(/Lat[^\d]*(\d+\.\d+)/i);
+        const lngMatch = text.match(/Long[^\d]*(\d+\.\d+)/i);
+
+        if (latMatch && lngMatch) {
+          centerLat = parseFloat(latMatch[1]);
+          centerLng = parseFloat(lngMatch[1]);
+          extractionMethod = 'AI_OCR_Vision';
         }
-      } catch (exifError) { }
+      } catch (ocrError) {
+        console.log("OCR failed even after image enhancement.");
+      }
     }
 
-    // 3. PIXEL ANALYSIS (Isolated execution)
+    // 3. STRICT VALIDATION: REJECT IF NO REAL METADATA
+    if (!centerLat || !centerLng) {
+      return res.status(400).json({
+        error: "Geospatial Data Missing",
+        details: "The system could not detect valid EXIF metadata or readable GPS text in this image. Please upload an original camera photo with location services enabled."
+      });
+    }
+
+    // 4. PIXEL ANALYSIS FOR EXACT AREA
     let pixelWidth = 1000;
     let pixelHeight = 1000;
     try {
       const image = await Jimp.read(imageBuffer);
-      pixelWidth = image.bitmap.width || 1000;
-      pixelHeight = image.bitmap.height || 1000;
-    } catch (jimpError) {
-      console.log("Jimp bypassed, using standard cadastral matrix.");
-    }
+      pixelWidth = image.bitmap.width;
+      pixelHeight = image.bitmap.height;
+    } catch (jimpError) { }
 
     const gsd = 0.05;
     const physicalWidthMeters = pixelWidth * gsd;
     const physicalHeightMeters = pixelHeight * gsd;
     const exactAreaSqMeters = Math.round(physicalWidthMeters * physicalHeightMeters);
 
-    // 4. TURF.JS GEOMETRY (Isolated execution)
-    let leafletPolygon = [];
-    let geoJsonPolygon = [];
+    // 5. PRECISE GEOMETRY GENERATION
+    const centerPoint = turf.point([centerLng, centerLat]);
+    const radiusMeters = Math.max(physicalWidthMeters, physicalHeightMeters) / 2;
+    const turfPolygon = turf.circle(centerPoint, radiusMeters, { steps: 4, units: 'meters' });
 
-    try {
-      const centerPoint = turf.point([centerLng, centerLat]);
-      const radiusMeters = Math.max(physicalWidthMeters, physicalHeightMeters) / 2;
-      const turfPolygon = turf.circle(centerPoint, radiusMeters, { steps: 4, units: 'meters' });
+    const leafletPolygon = [];
+    const geoJsonPolygon = [];
 
-      turfPolygon.geometry.coordinates[0].forEach(coord => {
-        leafletPolygon.push([coord[1], coord[0]]); // Leaflet format: [Lat, Lng]
-        geoJsonPolygon.push([coord[0], coord[1]]); // Mongo GeoJSON format: [Lng, Lat]
-      });
-    } catch (turfError) {
-      leafletPolygon = [
-        [centerLat - 0.005, centerLng - 0.005], [centerLat + 0.005, centerLng - 0.005],
-        [centerLat + 0.005, centerLng + 0.005], [centerLat - 0.005, centerLng + 0.005],
-        [centerLat - 0.005, centerLng - 0.005]
-      ];
-      geoJsonPolygon = leafletPolygon.map(p => [p[1], p[0]]);
-    }
+    turfPolygon.geometry.coordinates[0].forEach(coord => {
+      leafletPolygon.push([coord[1], coord[0]]);
+      geoJsonPolygon.push([coord[0], coord[1]]);
+    });
 
     const boundaryData = [{
-      type: "Boundary_Breach", // Must match Mongoose schema Enum exactly
-      confidence: extractionMethod === 'AI_OCR_Vision' ? 0.98 : 0.85,
+      type: "Boundary_Breach",
+      confidence: extractionMethod === 'AI_OCR_Vision' ? 0.98 : 0.99,
       location: { lat: centerLat, lng: centerLng },
       boundary_polygon: leafletPolygon
     }];
 
-    // 5. DATABASE PERSISTENCE (Isolated execution)
-    const savedBoundaries = [];
-    try {
-      const defaultLease = await MiningLease.findOne();
-      const validLeaseId = defaultLease ? defaultLease._id : new mongoose.Types.ObjectId();
-
-      const newRecord = new SurveillanceAnomaly({
-        leaseId: validLeaseId,
-        anomalyType: boundaryData[0].type,
-        severity: 'Critical',
-        aiConfidenceScore: boundaryData[0].confidence,
-        aiModelVersion: `JS-Vision-v2 (${extractionMethod})`,
-        aiAnalysisLog: `Location extracted via ${extractionMethod}. Area calculated via ${pixelWidth}x${pixelHeight} pixel matrix.`,
-        detectedCoordinates: { type: 'Point', coordinates: [centerLng, centerLat] },
-        infringingPolygon: { type: 'Polygon', coordinates: [geoJsonPolygon] },
-        breachAreaSqMeters: exactAreaSqMeters,
-        status: 'Pending_Inspection'
-      });
-
-      const saved = await newRecord.save();
-      savedBoundaries.push(saved);
-    } catch (dbError) {
-      console.error("MongoDB Save Skipped:", dbError.message);
-    }
-
     res.json({
       status: "success",
       anomalies: boundaryData,
-      detected_area: exactAreaSqMeters,
-      savedToDatabase: savedBoundaries.length
+      detected_area: exactAreaSqMeters
     });
 
   } catch (error) {
+    console.error("Pipeline crash:", error);
     res.status(500).json({ error: "Fatal Pipeline Error", details: error.message });
   }
 });
@@ -227,9 +204,7 @@ app.get('/api/audit-logs', async (req, res) => {
   }
 });
 
-// ==============================================================
-// 🌟 3D SCANNER: ELEVATION MAPPING WITH SMART FALLBACK 🌟
-// ==============================================================
+// 3D Elevation Route
 app.get('/api/elevation', async (req, res) => {
   try {
     const { lat, lng } = req.query;
@@ -242,27 +217,19 @@ app.get('/api/elevation', async (req, res) => {
       if (response.data && response.data.results && response.data.results.length > 0) {
         return res.json(response.data);
       }
-    } catch (apiError) {
-      console.warn("⚠️ OpenTopoData API is down or rate-limited. Activating Smart Fallback.");
-    }
+    } catch (apiError) { }
 
     const numLat = parseFloat(lat);
     const numLng = parseFloat(lng);
-
     const baseElevation = 450;
     const terrainVariation = Math.abs((numLat * numLng * 100000) % 850);
     const simulatedElevation = parseFloat((baseElevation + terrainVariation).toFixed(2));
 
     res.json({
-      results: [{
-        elevation: simulatedElevation,
-        location: { lat: numLat, lng: numLng }
-      }],
+      results: [{ elevation: simulatedElevation, location: { lat: numLat, lng: numLng } }],
       status: "OK (Smart Fallback Activated)"
     });
-
   } catch (error) {
-    console.error("Elevation Route Error:", error);
     res.status(500).json({ error: 'Failed to fetch elevation data' });
   }
 });

@@ -1,7 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { UploadCloud, Scan, AlertTriangle, ShieldCheck, Activity, Image as ImageIcon, MapPin, Database } from 'lucide-react';
+import { UploadCloud, Scan, AlertTriangle, ShieldCheck, Image as ImageIcon, MapPin } from 'lucide-react';
 
-// Added onScanSuccess prop to communicate with your Map component
 const Scanner2D = ({ onScanSuccess }) => {
     const [selectedFile, setSelectedFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
@@ -29,26 +28,24 @@ const Scanner2D = ({ onScanSuccess }) => {
             formData.append('file', selectedFile);
 
             const backendUrl = 'https://ai-mining.onrender.com';
-
             const response = await fetch(`${backendUrl}/api/ai/analyze-raster`, {
                 method: 'POST',
                 body: formData,
             });
 
-            if (!response.ok) throw new Error("Backend connection failed");
-
             const data = await response.json();
+            if (!response.ok) throw new Error(data.details || "Backend analysis failed");
+
             setResults(data);
 
-            // Trigger the Map to zoom in immediately after a successful scan
+            // Pass temporary session data up to parent component
             if (onScanSuccess && data.anomalies && data.anomalies.length > 0) {
-                const extractedLocation = data.anomalies[0].location;
-                onScanSuccess(extractedLocation);
+                onScanSuccess(data.anomalies[0]);
             }
 
         } catch (error) {
             console.error("AI Scan Error:", error);
-            alert("Failed to connect to AI Engine. Please check your Render backend.");
+            alert(error.message || "Failed to process image through AI Engine.");
         } finally {
             setScanning(false);
         }
@@ -61,9 +58,7 @@ const Scanner2D = ({ onScanSuccess }) => {
 
     return (
         <div className="flex w-full h-full p-4 gap-4 bg-[#0B0F17]">
-            {/* 80% Main Scanner Canvas */}
             <div className="flex-[4] h-full rounded-xl overflow-hidden shadow-2xl border border-[#1E293B] relative bg-[#0F172A] flex flex-col items-center justify-center">
-
                 {!previewUrl && (
                     <div className="flex flex-col items-center text-[#475569]">
                         <ImageIcon className="w-20 h-20 mb-4 opacity-50" />
@@ -74,13 +69,7 @@ const Scanner2D = ({ onScanSuccess }) => {
                         >
                             <UploadCloud className="w-4 h-4" /> Browse Local Files
                         </button>
-                        <input
-                            type="file"
-                            ref={fileInputRef}
-                            onChange={handleFileChange}
-                            accept="image/*"
-                            className="hidden"
-                        />
+                        <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
                     </div>
                 )}
 
@@ -92,18 +81,9 @@ const Scanner2D = ({ onScanSuccess }) => {
                                 alt="Satellite Raster"
                                 className={`max-w-full max-h-[80vh] object-contain rounded border border-[#1E293B] transition-all duration-500 ${scanning ? 'brightness-50 grayscale contrast-125' : ''}`}
                             />
-
                             {results && results.anomalies && results.anomalies.length > 0 && results.anomalies[0].boundary_polygon && (
-                                <svg
-                                    className="absolute inset-0 w-full h-full pointer-events-none z-20"
-                                    viewBox="0 0 100 100"
-                                    preserveAspectRatio="none"
-                                >
-                                    <polygon
-                                        points={getSvgPolygonPoints(results.anomalies[0].boundary_polygon)}
-                                        className="fill-red-500/20 stroke-red-500 stroke-[0.5] animate-pulse drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]"
-                                        vectorEffect="non-scaling-stroke"
-                                    />
+                                <svg className="absolute inset-0 w-full h-full pointer-events-none z-20" viewBox="0 0 100 100" preserveAspectRatio="none">
+                                    <polygon points={getSvgPolygonPoints(results.anomalies[0].boundary_polygon)} className="fill-red-500/20 stroke-red-500 stroke-[0.5] animate-pulse drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]" vectorEffect="non-scaling-stroke" />
                                 </svg>
                             )}
                         </div>
@@ -123,18 +103,13 @@ const Scanner2D = ({ onScanSuccess }) => {
                 )}
             </div>
 
-            {/* 20% Control Panel */}
             <div className="flex-[1] h-full bg-[#131B2B] rounded-xl border border-[#1E293B] shadow-2xl p-5 flex flex-col overflow-y-auto">
                 <h2 className="text-white font-bold text-lg mb-1">Cadastral Feature Extractor</h2>
                 <p className="text-xs text-[#94A3B8] mb-6">AI-driven automated property boundary extraction.</p>
 
                 {previewUrl && (
                     <button
-                        onClick={() => {
-                            setSelectedFile(null);
-                            setPreviewUrl(null);
-                            setResults(null);
-                        }}
+                        onClick={() => { setSelectedFile(null); setPreviewUrl(null); setResults(null); }}
                         className="w-full bg-[#0B0F17] hover:bg-[#1E293B] border border-[#1E293B] text-[#94A3B8] text-xs font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 mb-4 transition-all"
                     >
                         Clear Image
@@ -147,67 +122,29 @@ const Scanner2D = ({ onScanSuccess }) => {
                     className="w-full bg-gradient-to-r from-[#10B981] to-[#059669] hover:from-[#34D399] hover:to-[#10B981] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all mb-6"
                 >
                     {scanning ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Scan className="w-4 h-4" />}
-                    {scanning ? 'Processing Cadastral Data...' : 'Extract Boundaries'}
+                    {scanning ? 'Processing Data...' : 'Extract Boundaries'}
                 </button>
 
-                {/* Results Section */}
                 {results && (
                     <div className="mt-2 mb-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        {results.anomalies && results.anomalies.length > 0 ? (
-                            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 space-y-4">
-                                <div className="flex items-center gap-2 text-red-500 font-bold text-sm mb-1">
-                                    <AlertTriangle className="w-4 h-4" />
-                                    Boundary Extracted
+                        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 space-y-4">
+                            <div className="flex items-center gap-2 text-red-500 font-bold text-sm mb-1">
+                                <AlertTriangle className="w-4 h-4" /> Boundary Extracted
+                            </div>
+                            <div className="space-y-3 text-xs">
+                                <div className="flex justify-between pb-2 border-b border-white/10">
+                                    <span className="text-[#94A3B8]">Confidence:</span>
+                                    <span className="text-red-400 font-mono font-bold">{(results.anomalies[0].confidence * 100).toFixed(0)}%</span>
                                 </div>
-
-                                <div className="space-y-3">
-                                    <div className="flex flex-col gap-1 pb-2 border-b border-white/10">
-                                        <span className="text-[10px] text-[#94A3B8] uppercase tracking-wider">Classification</span>
-                                        <span className="text-white font-mono">{results.anomalies[0].type.replace('_', ' ')}</span>
-                                    </div>
-
-                                    <div className="flex justify-between items-center text-xs pb-2 border-b border-white/10">
-                                        <span className="text-[#94A3B8]">OCR Confidence:</span>
-                                        <span className="text-red-400 font-mono font-bold bg-red-500/20 px-2 py-1 rounded">
-                                            {(results.anomalies[0].confidence * 100).toFixed(0)}%
-                                        </span>
-                                    </div>
-
-                                    <div className="flex justify-between items-center text-xs pb-2 border-b border-white/10">
-                                        <span className="text-[#94A3B8]">Calculated Area:</span>
-                                        <span className="text-red-400 font-mono font-bold bg-red-500/20 px-2 py-1 rounded">
-                                            {results.detected_area} sq meters
-                                        </span>
-                                    </div>
-
-                                    <div className="flex flex-col gap-1 pt-1 border-b border-white/10 pb-3">
-                                        <span className="text-[10px] text-[#94A3B8] uppercase tracking-wider mb-1 flex items-center gap-1"><MapPin className="w-3 h-3" /> Polygon Nodes</span>
-                                        <span className="text-[#38BDF8] font-mono text-xs">
-                                            {results.anomalies[0].boundary_polygon ? `${results.anomalies[0].boundary_polygon.length} Spatial Points Extracted` : 'Processing...'}
-                                        </span>
-                                    </div>
+                                <div className="flex justify-between pb-2 border-b border-white/10">
+                                    <span className="text-[#94A3B8]">Calculated Area:</span>
+                                    <span className="text-red-400 font-mono font-bold">{results.detected_area} sq meters</span>
                                 </div>
                             </div>
-                        ) : (
-                            <div className="bg-[#10B981]/10 border border-[#10B981]/30 rounded-lg p-4 text-center">
-                                <ShieldCheck className="w-8 h-8 text-[#10B981] mx-auto mb-2" />
-                                <div className="text-[#10B981] font-bold text-sm">Valid Cadastral Scan</div>
-                                <div className="text-[#94A3B8] text-xs mt-1">Ready for database entry.</div>
-                            </div>
-                        )}
+                        </div>
                     </div>
                 )}
             </div>
-
-            <style dangerouslySetInnerHTML={{
-                __html: `
-        @keyframes scan {
-          0% { top: 0; opacity: 0; }
-          10% { opacity: 1; }
-          90% { opacity: 1; }
-          100% { top: 100%; opacity: 0; }
-        }
-      `}} />
         </div>
     );
 };
