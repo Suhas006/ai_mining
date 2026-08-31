@@ -80,14 +80,9 @@ export default function App() {
                   parcels={parcels}
                   leases={leases}
                   anomalies={anomalies}
-                  // 🌟 Pass session scanned boundaries into your main map view
                   sessionScannedBoundaries={sessionScannedBoundaries}
-                  onSelectAnomaly={(anomaly) => {
-                    setSelectedAnomalyForPDF(anomaly);
-                  }}
-                  onGeneratePDF={(id) => {
-                    const item = anomalies.find(a => a._id === id) || anomalies[0];
-                    setSelectedAnomalyForPDF(item);
+                  onScanSuccess={(newBoundary) => {
+                    setSessionScannedBoundaries(prev => [...prev, newBoundary]);
                   }}
                   fetchLayers={fetchLayers}
                 />
