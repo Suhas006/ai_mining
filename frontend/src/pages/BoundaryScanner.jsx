@@ -29,7 +29,6 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
 
     setLoading(true);
 
-    // 🌟 Force high-accuracy mobile browser GPS capture
     let browserLat = null;
     let browserLng = null;
 
@@ -38,14 +37,14 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
         const position = await new Promise((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject, {
             enableHighAccuracy: true,
-            timeout: 10000,
+            timeout: 8000,
             maximumAge: 0
           });
         });
         browserLat = position.coords.latitude;
         browserLng = position.coords.longitude;
       } catch (err) {
-        console.warn("Geolocation permission denied or unavailable:", err.message);
+        alert("Please enable location permissions in your browser settings so the AI can map your exact mobile position.");
       }
     }
 
@@ -75,7 +74,8 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
 
       setResults({
         confidence: realConfidence,
-        area: realArea
+        area: realArea,
+        method: backendData.method
       });
 
       if (onScanSuccess && backendData.anomalies && backendData.anomalies.length > 0) {
@@ -87,7 +87,7 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
 
     } catch (error) {
       console.error("Upload failed:", error);
-      alert(error.response?.data?.details || "Scan failed. Check network connection.");
+      alert(error.response?.data?.details || "Scan failed.");
       setLoading(false);
     }
   };
@@ -115,19 +115,21 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
         >
+          {/* 🌟 Added capture="environment" to force direct mobile camera capture with GPS metadata */}
           <input
             type="file"
             ref={fileInputRef}
             className="hidden"
             onChange={handleFileChange}
             accept="image/*"
+            capture="environment"
           />
           <UploadCloud className={`w-8 h-8 mb-3 ${file ? 'text-[#10B981]' : 'text-[#0EA5E9]'}`} />
           <p className="text-sm font-medium text-white mb-1">
-            {file ? file.name : 'Upload Satellite Image'}
+            {file ? file.name : 'Capture / Upload Photo'}
           </p>
           <p className="text-[10px] text-[#94A3B8]">
-            {file ? 'Click or drag to replace' : 'Drag and drop or click to browse'}
+            {file ? 'Click or tap to replace' : 'Tap to open camera with GPS'}
           </p>
         </div>
 
@@ -159,6 +161,10 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
                 <div className="w-full bg-[#0B0F17] rounded-full h-1.5">
                   <div className="bg-[#10B981] h-1.5 rounded-full" style={{ width: `${results.confidence}%` }}></div>
                 </div>
+              </div>
+              <div className="flex justify-between text-xs pt-1 border-t border-[#10B981]/20">
+                <span className="text-[#94A3B8]">Method:</span>
+                <span className="text-cyan-400 font-mono text-[10px]">{results.method}</span>
               </div>
               <div className="flex justify-between text-xs pt-2 border-t border-[#10B981]/20">
                 <span className="text-[#94A3B8]">Calculated Area:</span>
