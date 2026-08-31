@@ -28,8 +28,26 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
     if (!file) return;
 
     setLoading(true);
+
+    // 🌟 Capture live mobile browser GPS as a foolproof backup
+    let browserLat = null;
+    let browserLng = null;
+    try {
+      const position = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
+      });
+      browserLat = position.coords.latitude;
+      browserLng = position.coords.longitude;
+    } catch (err) {
+      console.log("Browser geolocation unavailable, relying on image metadata.");
+    }
+
     const formData = new FormData();
     formData.append('file', file);
+    if (browserLat && browserLng) {
+      formData.append('lat', browserLat);
+      formData.append('lng', browserLng);
+    }
 
     try {
       const backendUrl = import.meta.env.VITE_API_BASE_URL || 'https://ai-mining.onrender.com';
@@ -62,7 +80,7 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
 
     } catch (error) {
       console.error("Upload failed:", error);
-      alert(error.response?.data?.details || "Scan failed. Ensure your image has valid GPS metadata or text.");
+      alert(error.response?.data?.details || "Scan failed.");
       setLoading(false);
     }
   };
