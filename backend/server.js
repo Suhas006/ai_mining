@@ -121,10 +121,10 @@ app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
       } catch (ocrError) { }
     }
 
-    // 3. SMART FALLBACK: Default location if metadata is stripped
+    // 3. SMART FALLBACK: Localized to Coimbatore region if metadata/GPS is stripped
     if (!centerLat || !centerLng) {
-      centerLat = 10.9560;
-      centerLng = 77.9620;
+      centerLat = 11.0168;
+      centerLng = 76.9558;
       extractionMethod = 'Smart_Default_Fallback';
     }
 
