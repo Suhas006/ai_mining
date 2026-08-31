@@ -24,7 +24,6 @@ export default function MapView({ scannedBoundaries = [] }) {
   const [flyZoom, setFlyZoom] = useState(14);
   const [hoverCoords, setHoverCoords] = useState([10.9560, 77.9620]);
 
-  // Automatically fly and zoom into the newly scanned boundary location instantly
   useEffect(() => {
     if (scannedBoundaries && scannedBoundaries.length > 0) {
       const latest = scannedBoundaries[scannedBoundaries.length - 1];
@@ -58,7 +57,6 @@ export default function MapView({ scannedBoundaries = [] }) {
 
           <TileLayer url={tileProviders[mapType].url} attribution={tileProviders[mapType].attribution} maxZoom={19} />
 
-          {/* RENDER ONLY ACTIVE SESSION SCANNED BOUNDARIES (Zero Database Clutter / Duplicates) */}
           {scannedBoundaries.map((boundary, idx) => (
             boundary.boundary_polygon && (
               <GeoJSON

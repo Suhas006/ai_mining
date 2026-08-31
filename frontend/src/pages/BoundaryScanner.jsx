@@ -9,9 +9,7 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
   const [results, setResults] = useState(null);
   const fileInputRef = useRef(null);
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-  };
+  const handleDragOver = (e) => e.preventDefault();
 
   const handleDrop = (e) => {
     e.preventDefault();
@@ -71,7 +69,6 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
 
   return (
     <div className="flex w-full h-full p-2 gap-2 bg-[#0B0F17]">
-      {/* 80% Map View - Passing scannedBoundaries so the red polygon renders */}
       <div className="flex-[4] h-full rounded-[32px] overflow-hidden shadow-2xl border border-[#1E293B]">
         <MapView
           parcels={parcels}
@@ -83,12 +80,10 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
         />
       </div>
 
-      {/* 20% Control Panel */}
       <div className="flex-[1] h-full bg-[#131B2B] rounded-xl border border-[#1E293B] shadow-2xl p-5 flex flex-col overflow-y-auto">
         <h2 className="text-white font-bold text-lg mb-1">2D AI Scanner</h2>
         <p className="text-xs text-[#94A3B8] mb-6">Analyze raster imagery for automated land boundary extraction.</p>
 
-        {/* Upload Zone */}
         <div
           className="border-2 border-dashed border-[#1E293B] hover:border-[#0EA5E9] bg-[#0B0F17] rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-colors mb-4"
           onDragOver={handleDragOver}
@@ -111,7 +106,6 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
           </p>
         </div>
 
-        {/* Scan Button */}
         <button
           onClick={handleScan}
           disabled={!file || loading}
@@ -125,7 +119,6 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
           {loading ? 'Analyzing Raster...' : 'Scan Image'}
         </button>
 
-        {/* Results Section */}
         {results && (
           <div className="mt-2 mb-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="bg-[#10B981]/10 border border-[#10B981]/30 rounded-lg p-4 space-y-3">
@@ -150,7 +143,6 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
           </div>
         )}
 
-        {/* Bottom Action Button */}
         <div className="mt-6 pt-4 border-t border-[#1E293B]">
           <button
             disabled={!results}
