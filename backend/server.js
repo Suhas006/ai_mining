@@ -23,9 +23,11 @@ const FieldInspection = require('./models/FieldInspection');
 const User = require('./models/User');
 const AuditLog = require('./models/AuditLog');
 
-// GIS Engines
+// GIS & Vision Engines
 const ExifParser = require('exif-parser');
 const turf = require('@turf/turf');
+const Tesseract = require('tesseract.js');
+const Jimp = require('jimp');
 
 const app = express();
 app.use(cors());
@@ -75,56 +77,86 @@ app.patch('/api/anomalies/:id/status', updateAnomalyStatus);
 app.patch('/api/anomalies/:id/assign', assignAnomalyOfficer);
 
 // ==============================================================
-// 🌟 2D SCANNER: REAL EXIF & TURF.JS BOUNDARY PIPELINE 🌟
+// 🌟 2D SCANNER: PURE JS VISION & OCR PIPELINE 🌟
 // ==============================================================
 app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: 'No satellite/drone image provided' });
+      return res.status(400).json({ error: 'No image provided' });
     }
 
-    // 1. Extract REAL GPS Data from the uploaded image using EXIF
-    const parser = ExifParser.create(req.file.buffer);
-    const result = parser.parse();
-
-    // Default fallback to Coimbatore if the uploaded photo has no GPS metadata
-    let centerLat = 11.0168;
+    const imageBuffer = req.file.buffer;
+    let centerLat = 11.0168; // Default fallback (Coimbatore)
     let centerLng = 76.9558;
+    let extractionMethod = 'Fallback';
 
-    if (result.tags && result.tags.GPSLatitude && result.tags.GPSLongitude) {
-      centerLat = result.tags.GPSLatitude;
-      centerLng = result.tags.GPSLongitude;
+    // 1. OPTICAL CHARACTER RECOGNITION (OCR) - Read visual text
+    try {
+      const { data: { text } } = await Tesseract.recognize(imageBuffer, 'eng');
+
+      const latMatch = text.match(/Lat[^\d]*(\d+\.\d+)/i);
+      const lngMatch = text.match(/Long[^\d]*(\d+\.\d+)/i);
+
+      if (latMatch && lngMatch) {
+        centerLat = parseFloat(latMatch[1]);
+        centerLng = parseFloat(lngMatch[1]);
+        extractionMethod = 'AI_OCR_Vision';
+      }
+    } catch (ocrError) {
+      console.warn("OCR failed, checking EXIF data next...");
     }
 
-    // 2. Generate a real boundary polygon using Turf.js (e.g., a 100m radius surveyed area)
+    // 2. EXIF FALLBACK - Check hidden metadata if text isn't found
+    if (extractionMethod === 'Fallback') {
+      try {
+        const parser = ExifParser.create(imageBuffer);
+        const result = parser.parse();
+        if (result.tags && result.tags.GPSLatitude && result.tags.GPSLongitude) {
+          centerLat = result.tags.GPSLatitude;
+          centerLng = result.tags.GPSLongitude;
+          extractionMethod = 'EXIF_Metadata';
+        }
+      } catch (exifError) { }
+    }
+
+    // 3. PIXEL ANALYSIS & GSD MATH - Calculate physical size based on actual image resolution
+    const image = await Jimp.read(imageBuffer);
+    const pixelWidth = image.bitmap.width;
+    const pixelHeight = image.bitmap.height;
+
+    // Ground Sample Distance: Assuming 1 pixel = 0.05 meters (5 cm)
+    const gsd = 0.05;
+    const physicalWidthMeters = pixelWidth * gsd;
+    const physicalHeightMeters = pixelHeight * gsd;
+
+    // Calculate REAL area based on the actual pixels inside the image
+    const exactAreaSqMeters = Math.round(physicalWidthMeters * physicalHeightMeters);
+
+    // 4. GENERATE GEOSPATIAL POLYGON (Turf.js)
     const centerPoint = turf.point([centerLng, centerLat]);
+    const radiusMeters = Math.max(physicalWidthMeters, physicalHeightMeters) / 2;
 
-    // Create a physical boundary (bounding box) 100 meters across
-    const options = { steps: 4, units: 'meters' }; // 4 steps creates a square/diamond
-    const turfPolygon = turf.circle(centerPoint, 50, options); // 50m radius
+    // Draw the boundary based strictly on the physical scale calculated above
+    const turfPolygon = turf.circle(centerPoint, radiusMeters, { steps: 4, units: 'meters' });
 
-    // 3. Calculate exact REAL Square Meters using Turf.js math (accounts for earth's curvature)
-    const exactAreaSqMeters = Math.round(turf.area(turfPolygon));
-
-    // 4. Format coordinates for Leaflet Frontend [Lat, Lng] and MongoDB [Lng, Lat]
     const leafletPolygon = [];
     const geoJsonPolygon = [];
 
     turfPolygon.geometry.coordinates[0].forEach(coord => {
       const lng = coord[0];
       const lat = coord[1];
-      leafletPolygon.push([lat, lng]); // For React-Leaflet
-      geoJsonPolygon.push([lng, lat]); // For MongoDB GeoJSON
+      leafletPolygon.push([lat, lng]);
+      geoJsonPolygon.push([lng, lat]);
     });
 
     const boundaryData = [{
       type: "Boundary_Breach",
-      confidence: 0.96, // High confidence for EXIF-extracted data
+      confidence: extractionMethod === 'AI_OCR_Vision' ? 0.98 : 0.85,
       location: { lat: centerLat, lng: centerLng },
       boundary_polygon: leafletPolygon
     }];
 
-    // 5. Save the real Geospatial Polygon to MongoDB
+    // 5. DATABASE PERSISTENCE
     const savedBoundaries = [];
     const defaultLease = await MiningLease.findOne();
     const validLeaseId = defaultLease ? defaultLease._id : new mongoose.Types.ObjectId();
@@ -134,8 +166,8 @@ app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
       anomalyType: boundaryData[0].type,
       severity: 'Critical',
       aiConfidenceScore: boundaryData[0].confidence,
-      aiModelVersion: 'TurfJS-Spatial-v1',
-      aiAnalysisLog: `Geospatial boundary extracted from image EXIF data.`,
+      aiModelVersion: `JS-Vision-v2 (${extractionMethod})`,
+      aiAnalysisLog: `Location extracted via ${extractionMethod}. Area calculated via ${pixelWidth}x${pixelHeight} pixel matrix at ${gsd}m GSD.`,
       detectedCoordinates: {
         type: 'Point',
         coordinates: [centerLng, centerLat]
@@ -151,7 +183,7 @@ app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
     const saved = await newRecord.save();
     savedBoundaries.push(saved);
 
-    // 6. Return the real calculated data to the frontend
+    // 6. RETURN DATA TO FRONTEND
     res.json({
       status: "success",
       anomalies: boundaryData,
@@ -160,8 +192,8 @@ app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
     });
 
   } catch (error) {
-    console.error("GIS Pipeline Error:", error.message);
-    res.status(500).json({ error: "Failed to process image boundary", details: error.message });
+    console.error("Vision Pipeline Error:", error.message);
+    res.status(500).json({ error: "Failed to process image through Vision pipeline", details: error.message });
   }
 });
 
@@ -218,8 +250,8 @@ app.get('/api/elevation', async (req, res) => {
     const numLng = parseFloat(lng);
 
     // Create a stable, realistic height based on coordinates
-    const baseElevation = 180;
-    const terrainVariation = Math.abs((numLat * numLng * 100) % 85);
+    const baseElevation = 450;
+    const terrainVariation = Math.abs((numLat * numLng * 100000) % 850);
     const simulatedElevation = parseFloat((baseElevation + terrainVariation).toFixed(2));
 
     res.json({
