@@ -55,7 +55,6 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
         area: realArea
       });
 
-      // 🌟 THIS TRIGGERS THE MAP TO RENDER THE RED POLYGON INSTANTLY 🌟
       if (onScanSuccess && backendData.anomalies && backendData.anomalies.length > 0) {
         onScanSuccess(backendData.anomalies[0]);
       }
@@ -72,7 +71,7 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
 
   return (
     <div className="flex w-full h-full p-2 gap-2 bg-[#0B0F17]">
-      {/* 80% Map View */}
+      {/* 80% Map View - Passing scannedBoundaries so the red polygon renders */}
       <div className="flex-[4] h-full rounded-[32px] overflow-hidden shadow-2xl border border-[#1E293B]">
         <MapView
           parcels={parcels}
