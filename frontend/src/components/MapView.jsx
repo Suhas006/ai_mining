@@ -18,7 +18,7 @@ function MapFlyController({ targetLocation, targetZoom }) {
   const map = useMap();
   useEffect(() => {
     if (targetLocation) {
-      map.flyTo(targetLocation, targetZoom || 15, { duration: 2.5, easeLinearity: 0.25 });
+      map.flyTo(targetLocation, targetZoom || 16, { duration: 2.5, easeLinearity: 0.25 });
     }
   }, [targetLocation, targetZoom, map]);
   return null;
@@ -29,7 +29,7 @@ function CoordinateTracker({ onUpdateCoords }) {
   return null;
 }
 
-export default function MapView({ scannedBoundaries = [] }) {
+export default function MapView({ parcels = [], leases = [], anomalies = [], scannedBoundaries = [], onSelectAnomaly }) {
   const [mapType, setMapType] = useState('satellite');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -37,6 +37,17 @@ export default function MapView({ scannedBoundaries = [] }) {
   const [flyZoom, setFlyZoom] = useState(14);
   const [searchPin, setSearchPin] = useState(null);
   const [hoverCoords, setHoverCoords] = useState([10.9560, 77.9620]);
+
+  // 🌟 Automatically fly and zoom into the scanned boundary location instantly
+  useEffect(() => {
+    if (scannedBoundaries && scannedBoundaries.length > 0) {
+      const latest = scannedBoundaries[scannedBoundaries.length - 1];
+      if (latest.location && latest.location.lat && latest.location.lng) {
+        setFlyTarget([latest.location.lat, latest.location.lng]);
+        setFlyZoom(18); // Close zoom level to view property lines clearly
+      }
+    }
+  }, [scannedBoundaries]);
 
   const defaultLat = 10.9560;
   const defaultLng = 77.9620;
@@ -66,6 +77,7 @@ export default function MapView({ scannedBoundaries = [] }) {
     setSearchQuery(result.display_name.split(',')[0]);
   };
 
+  const parcelStyle = { color: '#10B981', weight: 2.5, fillColor: '#10B981', fillOpacity: 0.25, dashArray: '4' };
   const anomalyStyle = { color: '#EF4444', weight: 3.5, fillColor: '#EF4444', fillOpacity: 0.55 };
 
   return (
@@ -105,22 +117,35 @@ export default function MapView({ scannedBoundaries = [] }) {
             </Marker>
           )}
 
-          {/* TEMPORARY SESSION SCANNED BOUNDARIES (Disappears on page reload) */}
+          {/* Render standard GIS parcels */}
+          {parcels.map((parcel) => (
+            parcel.boundaryPolygon && (
+              <GeoJSON key={`parcel-${parcel._id}`} data={parcel.boundaryPolygon} style={parcelStyle} />
+            )
+          ))}
+
+          {/* Render database anomalies */}
+          {anomalies.map((anomaly) => (
+            anomaly.infringingPolygon && (
+              <GeoJSON key={`anomaly-${anomaly._id}`} data={anomaly.infringingPolygon} style={anomalyStyle} />
+            )
+          ))}
+
+          {/* 🌟 RENDER SESSION SCANNED BOUNDARIES DYNAMICALLY */}
           {scannedBoundaries.map((boundary, idx) => (
-            <React.Fragment key={`scan-boundary-${idx}`}>
-              {boundary.boundary_polygon && (
-                <GeoJSON
-                  data={{
-                    type: "Feature",
-                    geometry: {
-                      type: "Polygon",
-                      coordinates: [boundary.boundary_polygon.map(coord => [coord[1], coord[0]])]
-                    }
-                  }}
-                  style={anomalyStyle}
-                />
-              )}
-            </React.Fragment>
+            boundary.boundary_polygon && (
+              <GeoJSON
+                key={`scan-boundary-${idx}`}
+                data={{
+                  type: "Feature",
+                  geometry: {
+                    type: "Polygon",
+                    coordinates: [boundary.boundary_polygon.map(coord => [coord[1], coord[0]])]
+                  }
+                }}
+                style={anomalyStyle}
+              />
+            )
           ))}
         </MapContainer>
       </div>
