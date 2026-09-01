@@ -32,6 +32,7 @@ function CoordinateTracker({ onUpdateCoords }) {
 export default function MapView({ scannedBoundaries = [] }) {
   const [mapType, setMapType] = useState('satellite');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
   const [flyTarget, setFlyTarget] = useState(null);
   const [flyZoom, setFlyZoom] = useState(14);
@@ -93,24 +94,51 @@ export default function MapView({ scannedBoundaries = [] }) {
     <div className="relative w-full h-full bg-[#0B0F17] rounded-[32px] border border-[#1E293B] overflow-hidden flex flex-col md:flex-row shadow-2xl">
 
       {/* TOP SEARCH & NAVIGATION BAR */}
-      <div className="absolute top-4 left-16 right-4 md:right-auto z-[1000] flex flex-col sm:flex-row items-stretch sm:items-center gap-3 max-w-3xl">
+      <div className="absolute top-4 left-16 right-4 z-[1000] flex flex-row items-start justify-between pointer-events-none">
 
         {/* Search Bar */}
-        <div className="relative flex-1 bg-[#131B2B]/95 backdrop-blur-md border border-[#1E293B] rounded-lg shadow-2xl p-1.5 flex items-center">
-          <div className="pl-2 pr-1 text-[#0EA5E9]"><Search className="w-4 h-4" /></div>
-          <input
-            type="text"
-            placeholder="Search ANY Location (Karur, Salem, Chennai...)..."
-            value={searchQuery}
-            onChange={(e) => { setSearchQuery(e.target.value); handleSearch(e.target.value); }}
-            className="w-full bg-transparent text-xs text-white placeholder-[#94A3B8] focus:outline-none px-2 py-1.5 font-medium"
-          />
-          {searchQuery && (
-            <button onClick={() => { setSearchQuery(''); setSearchResults([]); setSearchPin(null); }} className="px-2 text-xs text-[#94A3B8] hover:text-white">✕</button>
-          )}
+        <div className="pointer-events-auto relative flex flex-col items-start justify-start">
+          <div 
+            className={`relative flex bg-[#131B2B]/95 backdrop-blur-md border border-[#1E293B] rounded-full shadow-2xl items-center transition-all duration-300 ease-in-out overflow-hidden ${
+              isSearchExpanded ? 'w-64 p-1.5' : 'w-10 h-10 p-0 justify-center cursor-pointer'
+            }`}
+            onClick={() => { if (!isSearchExpanded) setIsSearchExpanded(true); }}
+          >
+            <div 
+              className={`text-[#0EA5E9] flex items-center justify-center transition-all ${isSearchExpanded ? 'pl-2 pr-1' : 'w-full h-full rounded-full hover:bg-[#1E293B]'}`}
+              onClick={(e) => {
+                if (isSearchExpanded) {
+                  e.stopPropagation();
+                  if (!searchQuery) setIsSearchExpanded(false);
+                }
+              }}
+            >
+              <Search className="w-4 h-4" />
+            </div>
+            
+            <input
+              type="text"
+              placeholder="Search ANY Location..."
+              value={searchQuery}
+              onChange={(e) => { setSearchQuery(e.target.value); handleSearch(e.target.value); }}
+              className={`bg-transparent text-xs text-white placeholder-[#94A3B8] focus:outline-none font-medium transition-all duration-300 ease-in-out ${
+                isSearchExpanded ? 'w-full px-2 opacity-100' : 'w-0 opacity-0 px-0'
+              }`}
+              onBlur={(e) => {
+                setTimeout(() => {
+                  if (!searchQuery && searchResults.length === 0) {
+                    setIsSearchExpanded(false);
+                  }
+                }, 200);
+              }}
+            />
+            {searchQuery && isSearchExpanded && (
+              <button onClick={(e) => { e.stopPropagation(); setSearchQuery(''); setSearchResults([]); setSearchPin(null); }} className="px-2 text-xs text-[#94A3B8] hover:text-white">✕</button>
+            )}
+          </div>
 
-          {searchResults.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-[#131B2B] border border-[#1E293B] rounded-lg shadow-2xl overflow-hidden z-[2000] max-h-60 overflow-y-auto">
+          {searchResults.length > 0 && isSearchExpanded && (
+            <div className="absolute top-full left-0 w-64 mt-2 bg-[#131B2B] border border-[#1E293B] rounded-lg shadow-2xl overflow-hidden z-[2000] max-h-60 overflow-y-auto">
               {searchResults.map((item, idx) => (
                 <div key={idx} onClick={() => handleSelectLocation(item)} className="p-2.5 hover:bg-[#0EA5E9]/20 border-b border-[#1E293B] last:border-0 cursor-pointer flex items-center gap-2 transition-all text-xs">
                   <MapPin className="w-4 h-4 text-[#0EA5E9] shrink-0" />
@@ -124,18 +152,14 @@ export default function MapView({ scannedBoundaries = [] }) {
           )}
         </div>
 
-        {/* Tile & District Presets Toolbar */}
-        <div className="bg-[#131B2B]/95 backdrop-blur-md border border-[#1E293B] rounded-lg p-1.5 shadow-2xl flex flex-wrap items-center gap-1.5 text-xs">
-          <button onClick={() => setMapType('satellite')} className={`px-3 py-1.5 rounded text-xs font-bold transition-all ${mapType === 'satellite' ? 'bg-[#0EA5E9] text-white shadow-md' : 'text-[#94A3B8] hover:text-white hover:bg-[#1E293B]'}`}>🛰️ Satellite</button>
-          <button onClick={() => setMapType('hybrid')} className={`px-3 py-1.5 rounded text-xs font-bold transition-all ${mapType === 'hybrid' ? 'bg-[#0EA5E9] text-white shadow-md' : 'text-[#94A3B8] hover:text-white hover:bg-[#1E293B]'}`}>🗺️ Hybrid</button>
-          <button onClick={() => setMapType('dark')} className={`px-3 py-1.5 rounded text-xs font-bold transition-all ${mapType === 'dark' ? 'bg-[#0EA5E9] text-white shadow-md' : 'text-[#94A3B8] hover:text-white hover:bg-[#1E293B]'}`}>🌙 Dark</button>
-
-          <div className="h-4 w-px bg-[#1E293B] mx-1 hidden sm:block"></div>
-
-          <button onClick={() => { setFlyTarget([10.9560, 77.9620]); setFlyZoom(14); }} className="px-2 py-1 bg-[#10B981]/20 hover:bg-[#10B981]/30 text-[#10B981] rounded border border-[#10B981]/30 text-[10px] font-bold">📍 Karur</button>
-          <button onClick={() => { setFlyTarget([11.6643, 78.1460]); setFlyZoom(13); }} className="px-2 py-1 bg-[#131B2B] hover:bg-[#1E293B] text-white rounded border border-[#1E293B] text-[10px] font-bold">Salem</button>
-          <button onClick={() => { setFlyTarget([13.0827, 80.2707]); setFlyZoom(12); }} className="px-2 py-1 bg-[#131B2B] hover:bg-[#1E293B] text-white rounded border border-[#1E293B] text-[10px] font-bold">Chennai</button>
-          <button onClick={() => { setFlyTarget([11.0168, 76.9558]); setFlyZoom(13); }} className="px-2 py-1 bg-[#131B2B] hover:bg-[#1E293B] text-white rounded border border-[#1E293B] text-[10px] font-bold">Coimbatore</button>
+        {/* Map Toggles Toolbar */}
+        <div className="pointer-events-auto bg-[#131B2B]/95 backdrop-blur-md border border-[#1E293B] rounded-full p-1.5 shadow-2xl flex items-center gap-1.5 text-xs">
+          <button title="Satellite" onClick={() => setMapType('satellite')} className={`p-2 rounded-full transition-all ${mapType === 'satellite' ? 'bg-[#0EA5E9] text-white shadow-md' : 'text-[#94A3B8] hover:text-white hover:bg-[#1E293B]'}`}>
+            <Globe className="w-4 h-4" />
+          </button>
+          <button title="Hybrid" onClick={() => setMapType('hybrid')} className={`p-2 rounded-full transition-all ${mapType === 'hybrid' ? 'bg-[#0EA5E9] text-white shadow-md' : 'text-[#94A3B8] hover:text-white hover:bg-[#1E293B]'}`}>
+            <Layers className="w-4 h-4" />
+          </button>
         </div>
       </div>
 
