@@ -134,7 +134,7 @@ export default function MapView({ scannedBoundaries = [] }) {
                 }
               }}
             >
-              <Search size={24} className="w-6 h-6" />
+              <Search size={18} className="w-5 h-5" />
             </div>
             
             <input
@@ -174,12 +174,12 @@ export default function MapView({ scannedBoundaries = [] }) {
         </div>
 
         {/* Map Toggles Toolbar */}
-        <div className="pointer-events-auto bg-[#131B2B]/95 backdrop-blur-md border border-[#1E293B] rounded-full p-2 shadow-2xl flex items-center gap-3 text-xs">
-          <button title="Satellite" onClick={() => setMapType('satellite')} className={`w-11 h-11 flex items-center justify-center rounded-full transition-all ${mapType === 'satellite' ? 'bg-[#0EA5E9] text-white shadow-md' : 'text-[#94A3B8] hover:text-white hover:bg-[#1E293B]'}`}>
-            <Globe size={24} />
+        <div className="pointer-events-auto bg-[#131B2B]/95 backdrop-blur-md border border-[#1E293B] rounded-full p-1.5 shadow-2xl flex items-center gap-2 text-xs">
+          <button title="Satellite" onClick={() => setMapType('satellite')} className={`w-9 h-9 flex items-center justify-center rounded-full transition-all ${mapType === 'satellite' ? 'bg-[#0EA5E9] text-white shadow-md' : 'text-[#94A3B8] hover:text-white hover:bg-[#1E293B]'}`}>
+            <Globe size={18} />
           </button>
-          <button title="Hybrid" onClick={() => setMapType('hybrid')} className={`w-11 h-11 flex items-center justify-center rounded-full transition-all ${mapType === 'hybrid' ? 'bg-[#0EA5E9] text-white shadow-md' : 'text-[#94A3B8] hover:text-white hover:bg-[#1E293B]'}`}>
-            <Layers size={24} />
+          <button title="Hybrid" onClick={() => setMapType('hybrid')} className={`w-9 h-9 flex items-center justify-center rounded-full transition-all ${mapType === 'hybrid' ? 'bg-[#0EA5E9] text-white shadow-md' : 'text-[#94A3B8] hover:text-white hover:bg-[#1E293B]'}`}>
+            <Layers size={18} />
           </button>
         </div>
       </div>
