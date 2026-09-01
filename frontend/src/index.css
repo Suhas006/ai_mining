@@ -57,3 +57,17 @@
 .animate-pulse-glow {
   animation: pulse-red-glow 2s infinite ease-in-out;
 }
+
+/* Force Crosshair Cursor on all Leaflet Maps */
+.leaflet-container,
+.leaflet-interactive,
+.leaflet-grab {
+  cursor: crosshair !important;
+}
+
+.leaflet-dragging .leaflet-grab,
+.leaflet-dragging .leaflet-grab .leaflet-interactive,
+.leaflet-dragging .leaflet-interactive,
+.leaflet-dragging .leaflet-container {
+  cursor: crosshair !important;
+}
