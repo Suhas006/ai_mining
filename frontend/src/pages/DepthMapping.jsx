@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Cuboid, AlertTriangle, ArrowDownToLine, ArrowUpToLine, MapPin, Activity } from 'lucide-react';
+import { MapContainer, TileLayer, useMapEvents } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import { Cuboid, AlertTriangle, ArrowDownToLine, ArrowUpToLine, MapPin, Activity, Map } from 'lucide-react';
 
 const DepthMapping = () => {
   // Reference Point (Normal Ground)
@@ -12,6 +14,34 @@ const DepthMapping = () => {
 
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
+
+  const [activePicker, setActivePicker] = useState(null);
+
+  const LocationPicker = () => {
+    useMapEvents({
+      contextmenu(e) {
+        if (activePicker === 'ground') {
+          setBaseLat(e.latlng.lat.toFixed(6));
+          setBaseLng(e.latlng.lng.toFixed(6));
+        } else if (activePicker === 'target') {
+          setTargetLat(e.latlng.lat.toFixed(6));
+          setTargetLng(e.latlng.lng.toFixed(6));
+        }
+        setActivePicker(null);
+      },
+      click(e) {
+        if (activePicker === 'ground') {
+          setBaseLat(e.latlng.lat.toFixed(6));
+          setBaseLng(e.latlng.lng.toFixed(6));
+        } else if (activePicker === 'target') {
+          setTargetLat(e.latlng.lat.toFixed(6));
+          setTargetLng(e.latlng.lng.toFixed(6));
+        }
+        setActivePicker(null);
+      }
+    });
+    return null;
+  };
 
   // Fetch from your Render Backend
   const fetchRealElevation = async (latitude, longitude) => {
@@ -85,21 +115,21 @@ const DepthMapping = () => {
           }}
         />
 
-        {!results && !loading && (
+        {!activePicker && !results && !loading && (
           <div className="z-10 text-center animate-pulse">
             <Cuboid className="w-20 h-20 text-[#1E293B] mx-auto mb-4" />
             <p className="text-[#475569] font-medium tracking-widest uppercase text-sm">Awaiting Baseline & Target GPS Coordinates</p>
           </div>
         )}
 
-        {loading && (
+        {!activePicker && loading && (
           <div className="z-10 text-center">
             <div className="w-16 h-16 border-4 border-[#0EA5E9]/20 border-t-[#0EA5E9] rounded-full animate-spin mx-auto mb-4 shadow-[0_0_20px_rgba(14,165,233,0.5)]" />
             <p className="text-[#0EA5E9] font-mono text-xs">CALCULATING DELTA FROM ESA COPERNICUS...</p>
           </div>
         )}
 
-        {results && !loading && (
+        {!activePicker && results && !loading && (
           <div className="z-10 w-full h-full flex flex-col items-center justify-center relative">
             <div className="relative w-64 h-64 perspective-1000">
               <div className="absolute inset-0 border-2 border-[#10B981] rounded-lg transform rotateX-45 shadow-[0_0_30px_rgba(16,185,129,0.2)] flex items-center justify-center">
@@ -130,6 +160,26 @@ const DepthMapping = () => {
             </div>
           </div>
         )}
+
+        {activePicker && (
+          <div className="absolute inset-0 z-50">
+            <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[400] bg-[#131B2B]/90 backdrop-blur border border-[#1E293B] text-white px-4 py-2 rounded-lg shadow-2xl text-sm font-bold flex items-center gap-2 pointer-events-none">
+              <MapPin className="w-4 h-4 text-[#0EA5E9]" />
+              {activePicker === 'ground' ? 'Right-click or Tap map for Reference Ground' : 'Right-click or Tap map for Target'}
+            </div>
+            <MapContainer 
+              center={[20.5937, 78.9629]} 
+              zoom={5} 
+              style={{ height: '100%', width: '100%' }}
+            >
+              <TileLayer 
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" 
+                attribution='&copy; OpenStreetMap contributors'
+              />
+              <LocationPicker />
+            </MapContainer>
+          </div>
+        )}
       </div>
 
       {/* 20% Control Panel */}
@@ -139,8 +189,15 @@ const DepthMapping = () => {
 
         {/* BASELINE Input */}
         <div className="mb-4 pb-4 border-b border-white/5">
-          <label className="block text-xs font-bold text-[#10B981] uppercase tracking-wider mb-2">
-            1. Reference Ground (Baseline)
+          <label className="flex justify-between items-center text-xs font-bold text-[#10B981] uppercase tracking-wider mb-2">
+            <span>1. Reference Ground (Baseline)</span>
+            <button 
+              onClick={() => setActivePicker(activePicker === 'ground' ? null : 'ground')} 
+              className={`p-1.5 rounded-md transition-colors ${activePicker === 'ground' ? 'bg-[#10B981] text-white' : 'hover:bg-white/10'}`} 
+              title="Pick on map"
+            >
+              <Map className="w-4 h-4" />
+            </button>
           </label>
           <input
             type="number"
@@ -160,8 +217,15 @@ const DepthMapping = () => {
 
         {/* TARGET Input */}
         <div className="mb-4">
-          <label className="block text-xs font-bold text-[#38BDF8] uppercase tracking-wider mb-2">
-            2. Target (Pit / Building)
+          <label className="flex justify-between items-center text-xs font-bold text-[#38BDF8] uppercase tracking-wider mb-2">
+            <span>2. Target (Pit / Building)</span>
+            <button 
+              onClick={() => setActivePicker(activePicker === 'target' ? null : 'target')} 
+              className={`p-1.5 rounded-md transition-colors ${activePicker === 'target' ? 'bg-[#38BDF8] text-white' : 'hover:bg-white/10'}`} 
+              title="Pick on map"
+            >
+              <Map className="w-4 h-4" />
+            </button>
           </label>
           <input
             type="number"
