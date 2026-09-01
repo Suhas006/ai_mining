@@ -29,6 +29,27 @@ function CoordinateTracker({ onUpdateCoords }) {
   return null;
 }
 
+function RightClickCoordinates() {
+  useMapEvents({
+    contextmenu: (e) => {
+      const lat = e.latlng.lat.toFixed(5);
+      const lng = e.latlng.lng.toFixed(5);
+      const text = `${lat}, ${lng}`;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          alert(`Coordinates copied to clipboard:\nLat: ${lat}\nLng: ${lng}`);
+        }).catch(err => {
+          console.error('Could not copy text: ', err);
+          alert(`Coordinates:\nLat: ${lat}\nLng: ${lng}`);
+        });
+      } else {
+        alert(`Coordinates:\nLat: ${lat}\nLng: ${lng}`);
+      }
+    }
+  });
+  return null;
+}
+
 export default function MapView({ scannedBoundaries = [] }) {
   const [mapType, setMapType] = useState('satellite');
   const [searchQuery, setSearchQuery] = useState('');
@@ -100,12 +121,12 @@ export default function MapView({ scannedBoundaries = [] }) {
         <div className="pointer-events-auto relative flex flex-col items-start justify-start">
           <div 
             className={`relative flex bg-[#131B2B]/95 backdrop-blur-md border border-[#1E293B] rounded-full shadow-2xl items-center transition-all duration-300 ease-in-out overflow-hidden ${
-              isSearchExpanded ? 'w-64 p-1.5' : 'w-10 h-10 p-0 justify-center cursor-pointer'
+              isSearchExpanded ? 'w-64 p-2 h-12' : 'w-12 h-12 p-0 flex items-center justify-center cursor-pointer'
             }`}
             onClick={() => { if (!isSearchExpanded) setIsSearchExpanded(true); }}
           >
             <div 
-              className={`text-[#0EA5E9] flex items-center justify-center transition-all ${isSearchExpanded ? 'pl-2 pr-1' : 'w-full h-full rounded-full hover:bg-[#1E293B]'}`}
+              className={`text-[#0EA5E9] flex items-center justify-center transition-all ${isSearchExpanded ? 'pl-2 pr-1' : 'w-full h-full rounded-full flex items-center justify-center hover:bg-[#1E293B]'}`}
               onClick={(e) => {
                 if (isSearchExpanded) {
                   e.stopPropagation();
@@ -113,7 +134,7 @@ export default function MapView({ scannedBoundaries = [] }) {
                 }
               }}
             >
-              <Search className="w-4 h-4" />
+              <Search size={24} className="w-6 h-6" />
             </div>
             
             <input
@@ -133,7 +154,7 @@ export default function MapView({ scannedBoundaries = [] }) {
               }}
             />
             {searchQuery && isSearchExpanded && (
-              <button onClick={(e) => { e.stopPropagation(); setSearchQuery(''); setSearchResults([]); setSearchPin(null); }} className="px-2 text-xs text-[#94A3B8] hover:text-white">✕</button>
+              <button onClick={(e) => { e.stopPropagation(); setSearchQuery(''); setSearchResults([]); setSearchPin(null); }} className="px-3 text-xs text-[#94A3B8] hover:text-white flex items-center justify-center h-full">✕</button>
             )}
           </div>
 
@@ -141,7 +162,7 @@ export default function MapView({ scannedBoundaries = [] }) {
             <div className="absolute top-full left-0 w-64 mt-2 bg-[#131B2B] border border-[#1E293B] rounded-lg shadow-2xl overflow-hidden z-[2000] max-h-60 overflow-y-auto">
               {searchResults.map((item, idx) => (
                 <div key={idx} onClick={() => handleSelectLocation(item)} className="p-2.5 hover:bg-[#0EA5E9]/20 border-b border-[#1E293B] last:border-0 cursor-pointer flex items-center gap-2 transition-all text-xs">
-                  <MapPin className="w-4 h-4 text-[#0EA5E9] shrink-0" />
+                  <MapPin size={20} className="text-[#0EA5E9] shrink-0" />
                   <div className="overflow-hidden">
                     <span className="font-bold text-white block truncate">{item.display_name.split(',')[0]}</span>
                     <span className="text-[10px] text-[#94A3B8] block truncate">{item.display_name}</span>
@@ -153,12 +174,12 @@ export default function MapView({ scannedBoundaries = [] }) {
         </div>
 
         {/* Map Toggles Toolbar */}
-        <div className="pointer-events-auto bg-[#131B2B]/95 backdrop-blur-md border border-[#1E293B] rounded-full p-1.5 shadow-2xl flex items-center gap-1.5 text-xs">
-          <button title="Satellite" onClick={() => setMapType('satellite')} className={`p-2 rounded-full transition-all ${mapType === 'satellite' ? 'bg-[#0EA5E9] text-white shadow-md' : 'text-[#94A3B8] hover:text-white hover:bg-[#1E293B]'}`}>
-            <Globe className="w-4 h-4" />
+        <div className="pointer-events-auto bg-[#131B2B]/95 backdrop-blur-md border border-[#1E293B] rounded-full p-2 shadow-2xl flex items-center gap-3 text-xs">
+          <button title="Satellite" onClick={() => setMapType('satellite')} className={`w-11 h-11 flex items-center justify-center rounded-full transition-all ${mapType === 'satellite' ? 'bg-[#0EA5E9] text-white shadow-md' : 'text-[#94A3B8] hover:text-white hover:bg-[#1E293B]'}`}>
+            <Globe size={24} />
           </button>
-          <button title="Hybrid" onClick={() => setMapType('hybrid')} className={`p-2 rounded-full transition-all ${mapType === 'hybrid' ? 'bg-[#0EA5E9] text-white shadow-md' : 'text-[#94A3B8] hover:text-white hover:bg-[#1E293B]'}`}>
-            <Layers className="w-4 h-4" />
+          <button title="Hybrid" onClick={() => setMapType('hybrid')} className={`w-11 h-11 flex items-center justify-center rounded-full transition-all ${mapType === 'hybrid' ? 'bg-[#0EA5E9] text-white shadow-md' : 'text-[#94A3B8] hover:text-white hover:bg-[#1E293B]'}`}>
+            <Layers size={24} />
           </button>
         </div>
       </div>
@@ -170,13 +191,34 @@ export default function MapView({ scannedBoundaries = [] }) {
 
       {/* Map Canvas */}
       <div className="flex-1 h-full w-full relative">
-        <MapContainer center={[defaultLat, defaultLng]} zoom={13} zoomControl={false} style={{ height: '100%', width: '100%' }}>
+        <MapContainer 
+          center={[defaultLat, defaultLng]} 
+          zoom={13} 
+          minZoom={4} 
+          maxZoom={22} 
+          zoomControl={false} 
+          maxBounds={[[-90, -180], [90, 180]]}
+          maxBoundsViscosity={1.0}
+          style={{ height: '100%', width: '100%' }}
+        >
           <ZoomControl position="bottomright" />
           <MapFlyController targetLocation={flyTarget} targetZoom={flyZoom} />
           <CoordinateTracker onUpdateCoords={setHoverCoords} />
+          <RightClickCoordinates />
 
-          <TileLayer url={tileProviders[mapType].url} attribution={tileProviders[mapType].attribution} maxZoom={19} />
-          {mapType === 'hybrid' && tileProviders.hybrid.labelsUrl && <TileLayer url={tileProviders.hybrid.labelsUrl} maxZoom={19} />}
+          <TileLayer 
+            url={tileProviders[mapType].url} 
+            attribution={tileProviders[mapType].attribution} 
+            maxNativeZoom={18}
+            maxZoom={22} 
+          />
+          {mapType === 'hybrid' && tileProviders.hybrid.labelsUrl && (
+            <TileLayer 
+              url={tileProviders.hybrid.labelsUrl} 
+              maxNativeZoom={18}
+              maxZoom={22} 
+            />
+          )}
 
           {searchPin && (
             <Marker position={[searchPin.lat, searchPin.lng]} icon={searchMarkerIcon}>

@@ -1,12 +1,13 @@
 import React, { useState, useRef } from 'react';
 import MapView from '../components/MapView';
-import { UploadCloud, CheckCircle, Search, UserCheck } from 'lucide-react';
+import { UploadCloud, CheckCircle, Search, UserCheck, Camera, X } from 'lucide-react';
 import axios from 'axios';
 
 const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries, onScanSuccess, onSelectAnomaly, onGeneratePDF, fetchLayers }) => {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
   const fileInputRef = useRef(null);
 
   const handleDragOver = (e) => e.preventDefault();
@@ -93,8 +94,10 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
   };
 
   return (
-    <div className="flex w-full h-full p-2 gap-2 bg-[#0B0F17]">
-      <div className="flex-[4] h-full rounded-[32px] overflow-hidden shadow-2xl border border-[#1E293B]">
+    <div className="flex w-full h-full p-2 bg-[#0B0F17] relative overflow-hidden">
+      
+      {/* Main Map Container */}
+      <div className="flex-1 w-full h-full rounded-[32px] overflow-hidden shadow-2xl border border-[#1E293B] relative">
         <MapView
           parcels={parcels}
           leases={leases}
@@ -103,10 +106,31 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
           onSelectAnomaly={onSelectAnomaly}
           onGeneratePDF={onGeneratePDF}
         />
+
+        {/* Floating Camera Button */}
+        <div className="absolute top-24 right-4 z-[1050]">
+          <button 
+            title="Open 2D Scanner"
+            onClick={() => setIsScannerOpen(true)} 
+            className="w-12 h-12 p-2 bg-[#131B2B]/95 backdrop-blur-md border border-[#1E293B] shadow-2xl flex items-center justify-center rounded-full text-[#94A3B8] hover:text-white hover:bg-[#1E293B] transition-all"
+          >
+            <Camera size={24} />
+          </button>
+        </div>
       </div>
 
-      <div className="flex-[1] h-full bg-[#131B2B] rounded-xl border border-[#1E293B] shadow-2xl p-5 flex flex-col overflow-y-auto">
-        <h2 className="text-white font-bold text-lg mb-1">2D AI Scanner</h2>
+      {/* Sliding Drawer */}
+      <div 
+        className={`absolute top-2 right-2 bottom-2 w-80 bg-[#131B2B] rounded-xl border border-[#1E293B] shadow-2xl p-5 flex flex-col overflow-y-auto transform transition-transform duration-300 ease-in-out z-[2000] ${
+          isScannerOpen ? 'translate-x-0' : 'translate-x-[120%]'
+        }`}
+      >
+        <div className="flex items-center justify-between mb-1">
+          <h2 className="text-white font-bold text-lg">2D AI Scanner</h2>
+          <button onClick={() => setIsScannerOpen(false)} className="text-[#94A3B8] hover:text-white p-1 rounded-md hover:bg-[#1E293B] transition-colors">
+            <X size={20} />
+          </button>
+        </div>
         <p className="text-xs text-[#94A3B8] mb-6">Analyze raster imagery for automated land boundary extraction.</p>
 
         <div
