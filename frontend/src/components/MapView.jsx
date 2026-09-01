@@ -171,7 +171,7 @@ export default function MapView({ scannedBoundaries = [] }) {
       {/* Map Canvas */}
       <div className="flex-1 h-full w-full relative">
         <MapContainer center={[defaultLat, defaultLng]} zoom={13} zoomControl={false} style={{ height: '100%', width: '100%' }}>
-          <ZoomControl position="topright" />
+          <ZoomControl position="bottomright" />
           <MapFlyController targetLocation={flyTarget} targetZoom={flyZoom} />
           <CoordinateTracker onUpdateCoords={setHoverCoords} />
 
