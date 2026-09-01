@@ -223,9 +223,9 @@ const DepthMapping = () => {
         )}
 
         {activePicker && (
-          <div className="absolute inset-0 z-50">
+          <div className="relative w-full h-full rounded-xl overflow-hidden z-50">
             {/* TOP SEARCH & NAVIGATION BAR */}
-            <div className="absolute top-4 left-4 right-4 z-[400] flex justify-between pointer-events-none">
+            <div className="absolute top-4 left-4 right-4 z-[1000] flex justify-between pointer-events-none">
               
               {/* Search Bar */}
               <div className="pointer-events-auto relative flex flex-col items-start justify-start">
@@ -294,7 +294,7 @@ const DepthMapping = () => {
               </div>
             </div>
 
-            <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-[400] bg-[#131B2B]/90 backdrop-blur border border-[#1E293B] text-white px-4 py-2 rounded-lg shadow-2xl text-sm font-bold flex items-center gap-2 pointer-events-none">
+            <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-[1000] bg-[#131B2B]/90 backdrop-blur border border-[#1E293B] text-white px-4 py-2 rounded-lg shadow-2xl text-sm font-bold flex items-center gap-2 pointer-events-none">
               <MapPin className="w-4 h-4 text-[#0EA5E9]" />
               {activePicker === 'ground' ? 'Right-click or Tap map for Reference Ground' : 'Right-click or Tap map for Target'}
             </div>
@@ -302,7 +302,11 @@ const DepthMapping = () => {
             <MapContainer 
               center={[20.5937, 78.9629]} 
               zoom={5} 
+              minZoom={3}
+              maxZoom={22}
               zoomControl={false}
+              maxBounds={[[-90, -180], [90, 180]]}
+              maxBoundsViscosity={1.0}
               style={{ height: '100%', width: '100%' }}
             >
               <ZoomControl position="bottomright" />
