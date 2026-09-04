@@ -197,7 +197,7 @@ app.get('/api/audit-logs', async (req, res) => {
 });
 
 // ==============================================================
-// 🌟 3D ELEVATION SCANNER & VERIFICATION BYPASS 🌟
+// 🌟 3D ELEVATION SCANNER (100% LIVE DATA) 🌟
 // ==============================================================
 app.get('/api/elevation', async (req, res) => {
   try {
@@ -207,38 +207,8 @@ app.get('/api/elevation', async (req, res) => {
     const numLat = parseFloat(lat);
     const numLng = parseFloat(lng);
 
-    // --- DR. KALAM AWARD PRESENTATION BYPASS ---
-    // Tightened tolerance to 0.005 to prevent overlap bugs
-    const checkMatch = (tLat, tLng) => Math.abs(numLat - tLat) < 0.005 && Math.abs(numLng - tLng) < 0.005;
-
-    // Helper function to return bypass data formatted exactly like the real API
-    const returnMock = (elevation) => res.json({
-      results: [{ elevation, location: { lat: numLat, lng: numLng } }],
-      dataSource: "ESA Copernicus (LiDAR/Radar)"
-    });
-
-    // 1. Bingham Copper Mine (USA)
-    if (checkMatch(40.5366, -112.1444)) return returnMock(2400);
-    if (checkMatch(40.5222, -112.1519)) return returnMock(1200);
-
-    // 2. Grand Canyon (USA)
-    if (checkMatch(36.0577, -112.1385)) return returnMock(2100);
-    if (checkMatch(36.0930, -112.1154)) return returnMock(730);
-
-    // 3. Tamil Nadu (Coimbatore to Ooty)
-    if (checkMatch(11.0168, 76.9558)) return returnMock(420);
-    if (checkMatch(11.4000, 76.7350)) return returnMock(2630);
-
-    // 4. Mount Everest (Nepal)
-    if (checkMatch(28.0026, 86.8526)) return returnMock(5364);
-    if (checkMatch(27.9881, 86.9250)) return returnMock(8848);
-
-    // 5. Annapurna (Nepal)
-    if (checkMatch(28.2096, 83.9856)) return returnMock(820);
-    if (checkMatch(28.5961, 83.8203)) return returnMock(8091);
-    // ------------------------------------------
-
     try {
+      // 100% Live Request to ESA Copernicus Data
       const copernicusUrl = `https://api.opentopodata.org/v1/copernicus30m?locations=${lat},${lng}`;
       const response = await axios.get(copernicusUrl, { timeout: 15000 });
 
@@ -248,16 +218,18 @@ app.get('/api/elevation', async (req, res) => {
           dataSource: "ESA Copernicus (LiDAR/Radar)" // Flags that this is REAL data
         });
       }
-    } catch (apiError) { }
+    } catch (apiError) {
+      // Silently catch the Vercel timeout/block so the server doesn't crash
+    }
 
-    // Fallback Math triggered if API times out
+    // Mathematical safety net to prevent UI crash if Vercel kills the API connection
     const baseElevation = 450;
     const terrainVariation = Math.abs((numLat * numLng * 100000) % 850);
     const simulatedElevation = parseFloat((baseElevation + terrainVariation).toFixed(2));
 
     res.json({
       results: [{ elevation: simulatedElevation, location: { lat: numLat, lng: numLng } }],
-      dataSource: "⚠️ Smart Fallback (API Timeout)" // Flags that this is FALLBACK data
+      dataSource: "⚠️ Smart Fallback (API Timeout)" // Honestly flags to the user that live data failed
     });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch elevation data' });

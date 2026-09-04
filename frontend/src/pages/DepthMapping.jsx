@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, useMapEvents, useMap, ZoomControl, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Cuboid, AlertTriangle, ArrowDownToLine, ArrowUpToLine, MapPin, Activity, Map, Search, Layers, Globe } from 'lucide-react';
+import { Cuboid, ArrowDownToLine, ArrowUpToLine, MapPin, Activity, Map as MapIcon, Search, Layers, Globe } from 'lucide-react';
 
 const createCustomIcon = (color) => {
   return L.divIcon({
@@ -26,17 +26,13 @@ function MapFlyController({ targetLocation, targetZoom }) {
 }
 
 const DepthMapping = () => {
-  // Reference Point (Normal Ground)
   const [baseLat, setBaseLat] = useState('');
   const [baseLng, setBaseLng] = useState('');
-
-  // Target Point (Inside the Pit or Top of Building)
   const [targetLat, setTargetLat] = useState('');
   const [targetLng, setTargetLng] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
-
   const [activePicker, setActivePicker] = useState(null);
 
   const [mapType, setMapType] = useState('satellite');
@@ -50,12 +46,12 @@ const DepthMapping = () => {
   const tileProviders = {
     satellite: {
       url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-      attribution: '&copy; <a href="https://www.esri.com/">Esri</a> i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+      attribution: '&copy; Esri'
     },
     hybrid: {
       url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
       labelsUrl: "https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}",
-      attribution: '&copy; <a href="https://www.esri.com/">Esri</a> i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+      attribution: '&copy; Esri'
     }
   };
 
@@ -104,19 +100,19 @@ const DepthMapping = () => {
     return null;
   };
 
-  // Fetch from your Render Backend
   const fetchRealElevation = async (latitude, longitude) => {
     try {
-      // Clean backend URL
       const backendUrl = 'https://ai-mining.onrender.com';
-
       const response = await fetch(`${backendUrl}/api/elevation?lat=${latitude}&lng=${longitude}`);
 
       if (!response.ok) throw new Error(`Backend returned status: ${response.status}`);
       const data = await response.json();
 
       if (data && data.results && data.results.length > 0) {
-        return data.results[0].elevation;
+        return {
+          elevation: data.results[0].elevation,
+          dataSource: data.dataSource || "ESA Copernicus (LiDAR/Radar)"
+        };
       }
       return null;
     } catch (error) {
@@ -133,24 +129,25 @@ const DepthMapping = () => {
     setLoading(true);
 
     try {
-      // 1. Fetch Ground Level
-      const baseElevation = await fetchRealElevation(baseLat, baseLng);
-      // 2. Fetch Pit/Building Level
-      const targetElevation = await fetchRealElevation(targetLat, targetLng);
+      const baseData = await fetchRealElevation(baseLat, baseLng);
+      const targetData = await fetchRealElevation(targetLat, targetLng);
 
-      if (baseElevation !== null && targetElevation !== null) {
-        // Calculate the exact Z-Axis difference
-        const zDifference = baseElevation - targetElevation;
-
-        // If difference is positive, it's a hole/dig. If negative, it's a building.
+      if (baseData !== null && targetData !== null) {
+        const zDifference = baseData.elevation - targetData.elevation;
         const isDig = zDifference >= 0;
         const exactZAxis = Math.abs(zDifference).toFixed(2);
 
+        // Determine if fallback triggered on either request
+        const finalDataSource = (baseData.dataSource.includes('Fallback') || targetData.dataSource.includes('Fallback'))
+          ? "⚠️ Smart Fallback (API Timeout)"
+          : targetData.dataSource;
+
         setResults({
-          baseElev: baseElevation.toFixed(2),
-          targetElev: targetElevation.toFixed(2),
+          baseElev: baseData.elevation.toFixed(2),
+          targetElev: targetData.elevation.toFixed(2),
           exactZAxis: exactZAxis,
-          type: isDig ? 'Excavation (Depth)' : 'Structure (Height)'
+          type: isDig ? 'Excavation (Depth)' : 'Structure (Height)',
+          dataSource: finalDataSource
         });
       } else {
         alert("Failed to fetch satellite data. Check your backend connection.");
@@ -164,7 +161,7 @@ const DepthMapping = () => {
 
   return (
     <div className="flex w-full h-full p-4 gap-4 bg-[#0B0F17]">
-      {/* 80% Main Canvas */}
+      {/* Main Canvas */}
       <div className="flex-[4] h-full rounded-xl overflow-hidden shadow-2xl border border-[#1E293B] relative bg-[#0F172A] flex flex-col items-center justify-center">
         <div
           className="absolute inset-0 opacity-[0.03]"
@@ -224,14 +221,10 @@ const DepthMapping = () => {
 
         {activePicker && (
           <div className="relative w-full h-full rounded-xl overflow-hidden z-50">
-            {/* TOP SEARCH & NAVIGATION BAR */}
             <div className="absolute top-4 left-4 right-4 z-[1000] flex justify-between pointer-events-none">
-
-              {/* Search Bar */}
               <div className="pointer-events-auto relative flex flex-col items-start justify-start">
                 <div
-                  className={`relative flex bg-[#131B2B]/95 backdrop-blur-md border border-[#1E293B] rounded-full shadow-2xl items-center transition-all duration-300 ease-in-out overflow-hidden ${isSearchExpanded ? 'w-64 p-2 h-12' : 'w-12 h-12 p-0 flex items-center justify-center cursor-pointer'
-                    }`}
+                  className={`relative flex bg-[#131B2B]/95 backdrop-blur-md border border-[#1E293B] rounded-full shadow-2xl items-center transition-all duration-300 ease-in-out overflow-hidden ${isSearchExpanded ? 'w-64 p-2 h-12' : 'w-12 h-12 p-0 flex items-center justify-center cursor-pointer'}`}
                   onClick={() => { if (!isSearchExpanded) setIsSearchExpanded(true); }}
                 >
                   <div
@@ -251,13 +244,10 @@ const DepthMapping = () => {
                     placeholder="Search ANY Location..."
                     value={searchQuery}
                     onChange={(e) => { setSearchQuery(e.target.value); handleSearch(e.target.value); }}
-                    className={`bg-transparent text-xs text-white placeholder-[#94A3B8] focus:outline-none font-medium transition-all duration-300 ease-in-out ${isSearchExpanded ? 'w-full px-2 opacity-100' : 'w-0 opacity-0 px-0'
-                      }`}
+                    className={`bg-transparent text-xs text-white placeholder-[#94A3B8] focus:outline-none font-medium transition-all duration-300 ease-in-out ${isSearchExpanded ? 'w-full px-2 opacity-100' : 'w-0 opacity-0 px-0'}`}
                     onBlur={(e) => {
                       setTimeout(() => {
-                        if (!searchQuery && searchResults.length === 0) {
-                          setIsSearchExpanded(false);
-                        }
+                        if (!searchQuery && searchResults.length === 0) setIsSearchExpanded(false);
                       }, 200);
                     }}
                   />
@@ -281,7 +271,6 @@ const DepthMapping = () => {
                 )}
               </div>
 
-              {/* Map Toggles Toolbar */}
               <div className="pointer-events-auto bg-[#131B2B]/95 backdrop-blur-md border border-[#1E293B] rounded-full p-1.5 shadow-2xl flex items-center gap-2 text-xs">
                 <button title="Satellite" onClick={() => setMapType('satellite')} className={`w-9 h-9 flex items-center justify-center rounded-full transition-all ${mapType === 'satellite' ? 'bg-[#0EA5E9] text-white shadow-md' : 'text-[#94A3B8] hover:text-white hover:bg-[#1E293B]'}`}>
                   <Globe size={18} />
@@ -335,12 +324,11 @@ const DepthMapping = () => {
         )}
       </div>
 
-      {/* 20% Control Panel */}
+      {/* Control Panel */}
       <div className="flex-[1] h-full bg-[#131B2B] rounded-xl border border-[#1E293B] shadow-2xl p-5 flex flex-col overflow-y-auto">
         <h2 className="text-white font-bold text-lg mb-1">Delta Z-Axis Scanner</h2>
         <p className="text-xs text-[#94A3B8] mb-6">Calculates exact physical depth or height using differential satellite telemetry.</p>
 
-        {/* BASELINE Input */}
         <div className="mb-4 pb-4 border-b border-white/5">
           <label className="flex justify-between items-center text-xs font-bold text-[#10B981] uppercase tracking-wider mb-2">
             <span>1. Reference Ground (Baseline)</span>
@@ -349,7 +337,7 @@ const DepthMapping = () => {
               className={`p-1.5 rounded-md transition-colors ${activePicker === 'ground' ? 'bg-[#10B981] text-white' : 'hover:bg-white/10'}`}
               title="Pick on map"
             >
-              <Map className="w-4 h-4" />
+              <MapIcon className="w-4 h-4" />
             </button>
           </label>
           <input
@@ -368,7 +356,6 @@ const DepthMapping = () => {
           />
         </div>
 
-        {/* TARGET Input */}
         <div className="mb-4">
           <label className="flex justify-between items-center text-xs font-bold text-[#38BDF8] uppercase tracking-wider mb-2">
             <span>2. Target (Pit / Building)</span>
@@ -377,7 +364,7 @@ const DepthMapping = () => {
               className={`p-1.5 rounded-md transition-colors ${activePicker === 'target' ? 'bg-[#38BDF8] text-white' : 'hover:bg-white/10'}`}
               title="Pick on map"
             >
-              <Map className="w-4 h-4" />
+              <MapIcon className="w-4 h-4" />
             </button>
           </label>
           <input
@@ -405,7 +392,6 @@ const DepthMapping = () => {
           {loading ? 'Calculating...' : 'Calculate Exact Z-Axis'}
         </button>
 
-        {/* Results Section */}
         {results && (
           <div className="mt-2 mb-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="bg-[#0EA5E9]/10 border border-[#0EA5E9]/30 rounded-lg p-4 space-y-4">
@@ -432,8 +418,8 @@ const DepthMapping = () => {
 
                 <div className="flex justify-between items-center text-xs pt-2 border-t border-white/10 mt-2">
                   <span className="text-[#94A3B8]">Data Source:</span>
-                  <span className="text-white font-mono bg-white/10 px-2 py-1 rounded">
-                    ESA Copernicus (LiDAR/Radar)
+                  <span className={`font-mono px-2 py-1 rounded text-[10px] ${results.dataSource.includes('Fallback') ? 'bg-[#F59E0B]/20 text-[#F59E0B]' : 'bg-white/10 text-white'}`}>
+                    {results.dataSource}
                   </span>
                 </div>
               </div>
