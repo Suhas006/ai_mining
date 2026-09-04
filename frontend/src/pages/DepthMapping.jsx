@@ -226,16 +226,15 @@ const DepthMapping = () => {
           <div className="relative w-full h-full rounded-xl overflow-hidden z-50">
             {/* TOP SEARCH & NAVIGATION BAR */}
             <div className="absolute top-4 left-4 right-4 z-[1000] flex justify-between pointer-events-none">
-              
+
               {/* Search Bar */}
               <div className="pointer-events-auto relative flex flex-col items-start justify-start">
-                <div 
-                  className={`relative flex bg-[#131B2B]/95 backdrop-blur-md border border-[#1E293B] rounded-full shadow-2xl items-center transition-all duration-300 ease-in-out overflow-hidden ${
-                    isSearchExpanded ? 'w-64 p-2 h-12' : 'w-12 h-12 p-0 flex items-center justify-center cursor-pointer'
-                  }`}
+                <div
+                  className={`relative flex bg-[#131B2B]/95 backdrop-blur-md border border-[#1E293B] rounded-full shadow-2xl items-center transition-all duration-300 ease-in-out overflow-hidden ${isSearchExpanded ? 'w-64 p-2 h-12' : 'w-12 h-12 p-0 flex items-center justify-center cursor-pointer'
+                    }`}
                   onClick={() => { if (!isSearchExpanded) setIsSearchExpanded(true); }}
                 >
-                  <div 
+                  <div
                     className={`text-[#0EA5E9] flex items-center justify-center transition-all ${isSearchExpanded ? 'pl-2 pr-1' : 'w-full h-full rounded-full flex items-center justify-center hover:bg-[#1E293B]'}`}
                     onClick={(e) => {
                       if (isSearchExpanded) {
@@ -246,15 +245,14 @@ const DepthMapping = () => {
                   >
                     <Search size={18} className="w-5 h-5" />
                   </div>
-                  
+
                   <input
                     type="text"
                     placeholder="Search ANY Location..."
                     value={searchQuery}
                     onChange={(e) => { setSearchQuery(e.target.value); handleSearch(e.target.value); }}
-                    className={`bg-transparent text-xs text-white placeholder-[#94A3B8] focus:outline-none font-medium transition-all duration-300 ease-in-out ${
-                      isSearchExpanded ? 'w-full px-2 opacity-100' : 'w-0 opacity-0 px-0'
-                    }`}
+                    className={`bg-transparent text-xs text-white placeholder-[#94A3B8] focus:outline-none font-medium transition-all duration-300 ease-in-out ${isSearchExpanded ? 'w-full px-2 opacity-100' : 'w-0 opacity-0 px-0'
+                      }`}
                     onBlur={(e) => {
                       setTimeout(() => {
                         if (!searchQuery && searchResults.length === 0) {
@@ -298,10 +296,10 @@ const DepthMapping = () => {
               <MapPin className="w-4 h-4 text-[#0EA5E9]" />
               {activePicker === 'ground' ? 'Right-click or Tap map for Reference Ground' : 'Right-click or Tap map for Target'}
             </div>
-            
-            <MapContainer 
-              center={[20.5937, 78.9629]} 
-              zoom={5} 
+
+            <MapContainer
+              center={[20.5937, 78.9629]}
+              zoom={5}
               minZoom={3}
               maxZoom={22}
               zoomControl={false}
@@ -311,18 +309,18 @@ const DepthMapping = () => {
             >
               <ZoomControl position="bottomright" />
               <MapFlyController targetLocation={flyTarget} targetZoom={flyZoom} />
-              
-              <TileLayer 
-                url={tileProviders[mapType].url} 
+
+              <TileLayer
+                url={tileProviders[mapType].url}
                 attribution={tileProviders[mapType].attribution}
                 maxNativeZoom={18}
                 maxZoom={22}
               />
               {mapType === 'hybrid' && tileProviders.hybrid.labelsUrl && (
-                <TileLayer 
-                  url={tileProviders.hybrid.labelsUrl} 
+                <TileLayer
+                  url={tileProviders.hybrid.labelsUrl}
                   maxNativeZoom={18}
-                  maxZoom={22} 
+                  maxZoom={22}
                 />
               )}
 
@@ -346,9 +344,9 @@ const DepthMapping = () => {
         <div className="mb-4 pb-4 border-b border-white/5">
           <label className="flex justify-between items-center text-xs font-bold text-[#10B981] uppercase tracking-wider mb-2">
             <span>1. Reference Ground (Baseline)</span>
-            <button 
-              onClick={() => setActivePicker(activePicker === 'ground' ? null : 'ground')} 
-              className={`p-1.5 rounded-md transition-colors ${activePicker === 'ground' ? 'bg-[#10B981] text-white' : 'hover:bg-white/10'}`} 
+            <button
+              onClick={() => setActivePicker(activePicker === 'ground' ? null : 'ground')}
+              className={`p-1.5 rounded-md transition-colors ${activePicker === 'ground' ? 'bg-[#10B981] text-white' : 'hover:bg-white/10'}`}
               title="Pick on map"
             >
               <Map className="w-4 h-4" />
@@ -374,9 +372,9 @@ const DepthMapping = () => {
         <div className="mb-4">
           <label className="flex justify-between items-center text-xs font-bold text-[#38BDF8] uppercase tracking-wider mb-2">
             <span>2. Target (Pit / Building)</span>
-            <button 
-              onClick={() => setActivePicker(activePicker === 'target' ? null : 'target')} 
-              className={`p-1.5 rounded-md transition-colors ${activePicker === 'target' ? 'bg-[#38BDF8] text-white' : 'hover:bg-white/10'}`} 
+            <button
+              onClick={() => setActivePicker(activePicker === 'target' ? null : 'target')}
+              className={`p-1.5 rounded-md transition-colors ${activePicker === 'target' ? 'bg-[#38BDF8] text-white' : 'hover:bg-white/10'}`}
               title="Pick on map"
             >
               <Map className="w-4 h-4" />
