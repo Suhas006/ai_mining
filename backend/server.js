@@ -143,6 +143,39 @@ app.post('/api/ai/analyze-raster', upload.single('file'), async (req, res) => {
   }
 });
 
+// ==============================================================
+// 🌟 RESTORED WORKFLOW & GIS MAP ROUTES 🌟
+// ==============================================================
+app.post('/api/inspection/submit', submitInspection);
+app.get('/api/inspections/pending/:officerId', getPendingInspections);
+app.get('/api/reports/:anomalyId/legal-notice', generateLegalNotice);
+
+app.get('/api/gis/overview-layers', async (req, res) => {
+  try {
+    const parcels = await LandParcel.find();
+    const leases = await MiningLease.find();
+    const anomalies = await SurveillanceAnomaly.find().populate('leaseId').populate('assignedOfficerId');
+    const inspections = await FieldInspection.find();
+    const officers = await User.find({ role: { $in: ['District Mining Officer', 'Field Inspection Squad'] } }).select('-passwordHash');
+
+    res.json({ parcels, leases, anomalies, inspections, officers });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve GIS layers.' });
+  }
+});
+
+app.get('/api/audit-logs', async (req, res) => {
+  try {
+    const logs = await AuditLog.find().sort({ createdAt: -1 }).limit(50);
+    res.json(logs);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch audit logs' });
+  }
+});
+
+// ==============================================================
+// 🌟 3D ELEVATION SCANNER & VERIFICATION BYPASS 🌟
+// ==============================================================
 app.get('/api/elevation', async (req, res) => {
   try {
     const { lat, lng } = req.query;
