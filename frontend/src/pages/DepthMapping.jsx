@@ -102,7 +102,9 @@ const DepthMapping = () => {
 
   const fetchRealElevation = async (latitude, longitude) => {
     try {
-      const backendUrl = 'https://ai-mining.onrender.com';
+      // 🚨 FIX: Replaced hardcoded URL with dynamic environment variable / custom URL 🚨
+      const backendUrl = import.meta.env.VITE_API_BASE_URL || 'YOUR_BACKEND_URL_HERE';
+
       const response = await fetch(`${backendUrl}/api/elevation?lat=${latitude}&lng=${longitude}`);
 
       if (!response.ok) throw new Error(`Backend returned status: ${response.status}`);
@@ -134,8 +136,6 @@ const DepthMapping = () => {
 
       if (baseData !== null && targetData !== null) {
         const zDifference = baseData.elevation - targetData.elevation;
-
-        // Positive means the target is lower (Dig/Depth). Negative means target is higher (Height).
         const isDig = zDifference >= 0;
         const exactZAxis = Math.abs(zDifference).toFixed(2);
 
@@ -162,7 +162,6 @@ const DepthMapping = () => {
 
   return (
     <div className="flex w-full h-full p-4 gap-4 bg-[#0B0F17]">
-      {/* Main Canvas */}
       <div className="flex-[4] h-full rounded-xl overflow-hidden shadow-2xl border border-[#1E293B] relative bg-[#0F172A] flex flex-col items-center justify-center">
         <div
           className="absolute inset-0 opacity-[0.03]"
@@ -188,13 +187,11 @@ const DepthMapping = () => {
           </div>
         )}
 
-        {/* 🌟 NEW DYNAMIC Z-AXIS VISUALIZATION 🌟 */}
         {!activePicker && results && !loading && (
           <div className="z-10 w-full h-full flex flex-col items-center justify-center relative">
             <div className="flex flex-col items-center justify-center animate-in zoom-in-95 duration-500">
 
               {results.type.includes('Height') ? (
-                // HEIGHT VISUALIZATION (Mountains/Buildings - Target is on Top)
                 <div className="flex flex-col items-center">
                   <div className="bg-[#F59E0B]/10 border border-[#F59E0B]/50 px-6 py-3 rounded-xl backdrop-blur-md flex flex-col items-center shadow-[0_0_30px_rgba(245,158,11,0.2)]">
                     <span className="text-[10px] uppercase tracking-widest text-[#F59E0B]">Target (Peak/Roof)</span>
@@ -214,7 +211,6 @@ const DepthMapping = () => {
                   </div>
                 </div>
               ) : (
-                // DEPTH VISUALIZATION (Pits/Valleys - Ground is on Top)
                 <div className="flex flex-col items-center">
                   <div className="bg-[#10B981]/10 border border-[#10B981]/50 px-6 py-3 rounded-xl backdrop-blur-md flex flex-col items-center shadow-[0_0_30px_rgba(16,185,129,0.2)]">
                     <span className="text-[10px] uppercase tracking-widest text-[#10B981]">Reference Ground</span>
@@ -248,7 +244,6 @@ const DepthMapping = () => {
           </div>
         )}
 
-        {/* INTERACTIVE MAP OVERLAY */}
         {activePicker && (
           <div className="relative w-full h-full rounded-xl overflow-hidden z-50">
             <div className="absolute top-4 left-4 right-4 z-[1000] flex justify-between pointer-events-none">
@@ -354,7 +349,6 @@ const DepthMapping = () => {
         )}
       </div>
 
-      {/* Control Panel */}
       <div className="flex-[1] h-full bg-[#131B2B] rounded-xl border border-[#1E293B] shadow-2xl p-5 flex flex-col overflow-y-auto">
         <h2 className="text-white font-bold text-lg mb-1">Delta Z-Axis Scanner</h2>
         <p className="text-xs text-[#94A3B8] mb-6">Calculates exact physical depth or height using differential satellite telemetry.</p>
