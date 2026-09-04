@@ -209,7 +209,7 @@ app.get('/api/elevation', async (req, res) => {
 
     try {
       const copernicusUrl = `https://api.opentopodata.org/v1/copernicus30m?locations=${lat},${lng}`;
-      const response = await axios.get(copernicusUrl, { timeout: 5000 });
+      const response = await axios.get(copernicusUrl, { timeout: 15000 });
 
       if (response.data && response.data.results && response.data.results.length > 0) {
         return res.json(response.data);
