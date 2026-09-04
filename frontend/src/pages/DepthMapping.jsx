@@ -134,10 +134,11 @@ const DepthMapping = () => {
 
       if (baseData !== null && targetData !== null) {
         const zDifference = baseData.elevation - targetData.elevation;
+
+        // Positive means the target is lower (Dig/Depth). Negative means target is higher (Height).
         const isDig = zDifference >= 0;
         const exactZAxis = Math.abs(zDifference).toFixed(2);
 
-        // Determine if fallback triggered on either request
         const finalDataSource = (baseData.dataSource.includes('Fallback') || targetData.dataSource.includes('Fallback'))
           ? "⚠️ Smart Fallback (API Timeout)"
           : targetData.dataSource;
@@ -183,29 +184,57 @@ const DepthMapping = () => {
         {!activePicker && loading && (
           <div className="z-10 text-center">
             <div className="w-16 h-16 border-4 border-[#0EA5E9]/20 border-t-[#0EA5E9] rounded-full animate-spin mx-auto mb-4 shadow-[0_0_20px_rgba(14,165,233,0.5)]" />
-            <p className="text-[#0EA5E9] font-mono text-xs">CALCULATING DELTA FROM ESA COPERNICUS...</p>
+            <p className="text-[#0EA5E9] font-mono text-xs">CALCULATING Z-AXIS DELTA FROM ESA SATELLITES...</p>
           </div>
         )}
 
+        {/* 🌟 NEW DYNAMIC Z-AXIS VISUALIZATION 🌟 */}
         {!activePicker && results && !loading && (
           <div className="z-10 w-full h-full flex flex-col items-center justify-center relative">
-            <div className="relative w-64 h-64 perspective-1000">
-              <div className="absolute inset-0 border-2 border-[#10B981] rounded-lg transform rotateX-45 shadow-[0_0_30px_rgba(16,185,129,0.2)] flex items-center justify-center">
-                <span className="absolute -right-24 text-[#10B981] text-xs font-mono bg-[#10B981]/10 px-2 py-1 rounded">Ground: {results.baseElev}m</span>
-              </div>
+            <div className="flex flex-col items-center justify-center animate-in zoom-in-95 duration-500">
 
-              <div className={`absolute top-1/2 left-1/4 right-1/4 bottom-0 border-2 ${results.type.includes('Depth') ? 'border-[#38BDF8] bg-[#38BDF8]/10 translateZ-12 shadow-[inset_0_0_20px_rgba(56,189,248,0.3)]' : 'border-[#F59E0B] bg-[#F59E0B]/10 -translateZ-12 shadow-[0_0_20px_rgba(245,158,11,0.3)]'} transform rotateX-45 flex items-center justify-center`}>
-                <div className="absolute flex flex-col items-center -mt-6">
-                  {results.type.includes('Depth') ? (
-                    <ArrowDownToLine className="w-6 h-6 text-[#38BDF8] animate-bounce" />
-                  ) : (
-                    <ArrowUpToLine className="w-6 h-6 text-[#F59E0B] animate-bounce" />
-                  )}
-                  <span className={`bg-[#0B0F17] px-2 py-1 rounded text-[10px] font-mono border mt-2 ${results.type.includes('Depth') ? 'text-[#38BDF8] border-[#38BDF8]/30' : 'text-[#F59E0B] border-[#F59E0B]/30'}`}>
-                    EXACT {results.type.includes('Depth') ? 'DEPTH' : 'HEIGHT'}: {results.exactZAxis}m
-                  </span>
+              {results.type.includes('Height') ? (
+                // HEIGHT VISUALIZATION (Mountains/Buildings - Target is on Top)
+                <div className="flex flex-col items-center">
+                  <div className="bg-[#F59E0B]/10 border border-[#F59E0B]/50 px-6 py-3 rounded-xl backdrop-blur-md flex flex-col items-center shadow-[0_0_30px_rgba(245,158,11,0.2)]">
+                    <span className="text-[10px] uppercase tracking-widest text-[#F59E0B]">Target (Peak/Roof)</span>
+                    <span className="font-mono font-bold text-2xl text-white">{results.targetElev}m</span>
+                  </div>
+
+                  <div className="h-40 w-1 bg-gradient-to-b from-[#F59E0B] to-[#10B981] relative my-2 flex items-center justify-center shadow-[0_0_15px_rgba(245,158,11,0.5)]">
+                    <div className="absolute bg-[#0B0F17] border border-[#F59E0B]/50 px-4 py-2 rounded-full flex items-center gap-2 whitespace-nowrap shadow-xl">
+                      <ArrowUpToLine className="w-5 h-5 text-[#F59E0B] animate-bounce" />
+                      <span className="font-mono font-bold text-[#F59E0B]">+{results.exactZAxis}m Delta</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-[#10B981]/10 border border-[#10B981]/50 px-6 py-3 rounded-xl backdrop-blur-md flex flex-col items-center shadow-[0_0_30px_rgba(16,185,129,0.2)]">
+                    <span className="text-[10px] uppercase tracking-widest text-[#10B981]">Reference Ground</span>
+                    <span className="font-mono font-bold text-2xl text-white">{results.baseElev}m</span>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                // DEPTH VISUALIZATION (Pits/Valleys - Ground is on Top)
+                <div className="flex flex-col items-center">
+                  <div className="bg-[#10B981]/10 border border-[#10B981]/50 px-6 py-3 rounded-xl backdrop-blur-md flex flex-col items-center shadow-[0_0_30px_rgba(16,185,129,0.2)]">
+                    <span className="text-[10px] uppercase tracking-widest text-[#10B981]">Reference Ground</span>
+                    <span className="font-mono font-bold text-2xl text-white">{results.baseElev}m</span>
+                  </div>
+
+                  <div className="h-40 w-1 bg-gradient-to-b from-[#10B981] to-[#38BDF8] relative my-2 flex items-center justify-center shadow-[0_0_15px_rgba(56,189,248,0.5)]">
+                    <div className="absolute bg-[#0B0F17] border border-[#38BDF8]/50 px-4 py-2 rounded-full flex items-center gap-2 whitespace-nowrap shadow-xl">
+                      <ArrowDownToLine className="w-5 h-5 text-[#38BDF8] animate-bounce" />
+                      <span className="font-mono font-bold text-[#38BDF8]">- {results.exactZAxis}m Delta</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-[#38BDF8]/10 border border-[#38BDF8]/50 px-6 py-3 rounded-xl backdrop-blur-md flex flex-col items-center shadow-[0_0_30px_rgba(56,189,248,0.2)]">
+                    <span className="text-[10px] uppercase tracking-widest text-[#38BDF8]">Target (Pit/Valley)</span>
+                    <span className="font-mono font-bold text-2xl text-white">{results.targetElev}m</span>
+                  </div>
+                </div>
+              )}
+
             </div>
 
             <div className="absolute bottom-8 left-8 bg-[#131B2B]/90 backdrop-blur border border-[#1E293B] p-4 rounded-lg shadow-2xl">
@@ -219,6 +248,7 @@ const DepthMapping = () => {
           </div>
         )}
 
+        {/* INTERACTIVE MAP OVERLAY */}
         {activePicker && (
           <div className="relative w-full h-full rounded-xl overflow-hidden z-50">
             <div className="absolute top-4 left-4 right-4 z-[1000] flex justify-between pointer-events-none">
