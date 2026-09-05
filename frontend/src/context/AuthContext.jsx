@@ -6,7 +6,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
   const login = (email, password) => {
-    // Only one specific admin allowed
+    // Fixed Admin Account
     if (email === 'admin@depthfence.in' && password === 'SecureAdmin2026!') {
       setUser({
         email,
@@ -14,8 +14,9 @@ export const AuthProvider = ({ children }) => {
         name: 'System Administrator'
       });
       return true;
-    } else if (email && password) {
-      // Everyone else is a normal surveyor
+    } 
+    // Fixed User (Surveyor) Account
+    else if (email === 'user@depthfence.in' && password === 'Surveyor2026!') {
       setUser({
         email,
         role: 'surveyor',
@@ -23,6 +24,8 @@ export const AuthProvider = ({ children }) => {
       });
       return true;
     }
+    
+    // Reject all other attempts
     return false;
   };
 
