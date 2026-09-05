@@ -1,9 +1,12 @@
 import React, { useState, useRef } from 'react';
 import MapView from '../components/MapView';
 import { UploadCloud, CheckCircle, Search, UserCheck, Camera, X, Download, AlertTriangle } from 'lucide-react';
-import axios from 'axios';
+import { useLiveData } from '../context/LiveDataContext';
+import { useAuth } from '../context/AuthContext';
 
 const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries, onScanSuccess, onSelectAnomaly, onGeneratePDF, fetchLayers }) => {
+  const { incrementScans, addAuditLog } = useLiveData();
+  const { user } = useAuth();
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
@@ -65,6 +68,10 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
         method: backendData.method || 'GeoAI Raster Vision'
       });
 
+      // Log event
+      incrementScans();
+      addAuditLog('GeoAI Scan Executed', user?.email || 'Unknown User');
+
       if (onScanSuccess && backendData.anomalies && backendData.anomalies.length > 0) {
         onScanSuccess(backendData.anomalies[0]);
       }
@@ -100,10 +107,16 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
     const geojson = { type: "FeatureCollection", features: features };
     const blob = new Blob([JSON.stringify(geojson, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Cadastral_Scan_${new Date().getTime()}.geojson`;
-    a.click();
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `cadastral_extract_${new Date().getTime()}.geojson`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    // Log event
+    addAuditLog('Cadastral GeoJSON Exported', user?.email || 'Unknown User');
   };
 
   return (

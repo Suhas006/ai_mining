@@ -3,6 +3,8 @@ import { MapContainer, TileLayer, useMapEvents, useMap, ZoomControl, Marker, Pop
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Cuboid, ArrowDownToLine, ArrowUpToLine, MapPin, Activity, Map as MapIcon, Search, Layers, Globe, Sun, Building, Mountain, Navigation } from 'lucide-react';
+import { useLiveData } from '../context/LiveDataContext';
+import { useAuth } from '../context/AuthContext';
 
 const createCustomIcon = (color) => {
   return L.divIcon({
@@ -54,6 +56,9 @@ const calculateSolarAngle = (lat, lng) => {
 };
 
 const DepthMapping = () => {
+  const { incrementUlpins, addAuditLog } = useLiveData();
+  const { user } = useAuth();
+  
   const [surveyMode, setSurveyMode] = useState('macro');
 
   const [baseLat, setBaseLat] = useState('');
@@ -195,17 +200,19 @@ const DepthMapping = () => {
           const exactZAxis = Math.abs(zDifference).toFixed(2);
           const floorCount = Math.round(exactZAxis / 3.2);
 
-          setResults({
-            mode: 'macro',
-            baseElev: baseData.elevation.toFixed(2),
-            targetElev: targetData.elevation.toFixed(2),
-            exactZAxis: exactZAxis,
-            type: isDig ? 'Underground Infrastructure (Subsurface Rights)' : 'Vertical Property (Height)',
-            floorCount: isDig ? 0 : floorCount,
-            isDig: isDig,
-            dataSource: targetData.dataSource
-          });
-        }
+            setResults({
+              mode: 'macro',
+              baseElev: baseData.elevation.toFixed(2),
+              targetElev: targetData.elevation.toFixed(2),
+              exactZAxis: exactZAxis,
+              type: isDig ? 'Underground Infrastructure (Subsurface Rights)' : 'Vertical Property (Height)',
+              floorCount: isDig ? 0 : floorCount,
+              isDig: isDig,
+              dataSource: targetData.dataSource
+            });
+            incrementUlpins();
+            addAuditLog('3D ULPIN Minted', user?.email || 'Unknown User');
+          }
       } catch (error) { }
     } else {
       if (!shadowLength || !solarAngle) {
@@ -233,6 +240,8 @@ const DepthMapping = () => {
           dataSource: "AI Vision & Realtime Astro-Math"
         });
         setLoading(false);
+        incrementUlpins();
+        addAuditLog('3D ULPIN Minted', user?.email || 'Unknown User');
       }, 1000);
       return;
     }

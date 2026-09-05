@@ -1,10 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+
+import { ThemeProvider } from './context/ThemeContext';
+import { LiveDataProvider } from './context/LiveDataContext';
 
 import Sidebar from './components/Sidebar';
 import BoundaryScanner from './pages/BoundaryScanner';
 import DepthMapping from './pages/DepthMapping';
 import Scanner2D from './pages/Scanner2D';
+
+import LandingPage from './pages/LandingPage';
+import Login from './pages/Login';
+import Settings from './pages/Settings';
+import Profile from './pages/Profile';
+import AdminPanel from './pages/AdminPanel';
 
 import ThreeDPitViewer from './components/ThreeDPitViewer';
 import ParcelRegisterModal from './components/ParcelRegisterModal';
@@ -15,6 +26,12 @@ import ParcelsDetailModal from './components/ParcelsDetailModal';
 import LeasesDetailModal from './components/LeasesDetailModal';
 import EncroachmentDetailModal from './components/EncroachmentDetailModal';
 import AuthModal from './components/AuthModal';
+
+function SidebarWrapper() {
+  const location = useLocation();
+  if (location.pathname === '/login') return null;
+  return <Sidebar />;
+}
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -61,110 +78,126 @@ export default function App() {
   }, []);
 
   return (
-    <BrowserRouter>
-      <div className="flex h-screen w-full bg-[#0B0F17] overflow-hidden font-sans text-slate-200">
-        <Sidebar />
+    <ThemeProvider>
+      <LiveDataProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <div className="flex h-screen w-full bg-slate-50 dark:bg-[#0B0F17] overflow-hidden font-sans text-slate-900 dark:text-slate-200">
+              <SidebarWrapper />
 
-        <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-          <Routes>
-            <Route
-              path="/"
-              element={
-                <BoundaryScanner
-                  parcels={parcels}
-                  leases={leases}
-                  anomalies={anomalies}
-                  sessionScannedBoundaries={sessionScannedBoundaries}
-                  onScanSuccess={(newBoundary) => {
-                    setSessionScannedBoundaries(prev => [...prev, newBoundary]);
-                  }}
-                  onSelectAnomaly={(anomaly) => setSelectedAnomalyForPDF(anomaly)}
-                  onGeneratePDF={(id) => {
-                    const item = anomalies.find(a => a._id === id) || anomalies[0];
-                    setSelectedAnomalyForPDF(item);
-                  }}
-                  fetchLayers={fetchLayers}
-                />
-              }
-            />
-            <Route
-              path="/3d-mapping"
-              element={<DepthMapping />}
-            />
-            <Route
-              path="/scanner-2d"
-              element={
-                <Scanner2D
-                  onScanSuccess={(newBoundary) => {
-                    setSessionScannedBoundaries(prev => [...prev, newBoundary]);
-                  }}
-                />
-              }
-            />
-          </Routes>
-        </div>
+          <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+            <Routes>
+              <Route path="/" element={<ProtectedRoute><LandingPage /></ProtectedRoute>} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+              <Route path="/admin-panel" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
+              
+              <Route
+                path="/2d-scanner"
+                element={
+                  <ProtectedRoute>
+                    <BoundaryScanner
+                      parcels={parcels}
+                      leases={leases}
+                      anomalies={anomalies}
+                      sessionScannedBoundaries={sessionScannedBoundaries}
+                      onScanSuccess={(newBoundary) => {
+                        setSessionScannedBoundaries(prev => [...prev, newBoundary]);
+                      }}
+                      onSelectAnomaly={(anomaly) => setSelectedAnomalyForPDF(anomaly)}
+                      onGeneratePDF={(id) => {
+                        const item = anomalies.find(a => a._id === id) || anomalies[0];
+                        setSelectedAnomalyForPDF(item);
+                      }}
+                      fetchLayers={fetchLayers}
+                    />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/3d-mapping"
+                element={<ProtectedRoute><DepthMapping /></ProtectedRoute>}
+              />
+              <Route
+                path="/scanner-2d"
+                element={
+                  <ProtectedRoute>
+                    <Scanner2D
+                      onScanSuccess={(newBoundary) => {
+                        setSessionScannedBoundaries(prev => [...prev, newBoundary]);
+                      }}
+                    />
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </div>
 
-        <AuthModal
-          isOpen={isAuthOpen}
-          onClose={() => setIsAuthOpen(false)}
-          onLoginSuccess={(user) => {
-            setCurrentUser(user);
-            setIsAuthOpen(false);
-          }}
-        />
-
-        {is3DPitOpen && (
-          <ThreeDPitViewer
-            anomaly={anomalies[0]}
-            lease={leases[0]}
-            onClose={() => setIs3DPitOpen(false)}
+          <AuthModal
+            isOpen={isAuthOpen}
+            onClose={() => setIsAuthOpen(false)}
+            onLoginSuccess={(user) => {
+              setCurrentUser(user);
+              setIsAuthOpen(false);
+            }}
           />
-        )}
 
-        <ParcelRegisterModal
-          isOpen={isRegisterOpen}
-          onClose={() => setIsRegisterOpen(false)}
-          onRegisterSuccess={() => fetchLayers()}
-        />
+          {is3DPitOpen && (
+            <ThreeDPitViewer
+              anomaly={anomalies[0]}
+              lease={leases[0]}
+              onClose={() => setIs3DPitOpen(false)}
+            />
+          )}
 
-        <AISurveillanceAnalyzer
-          isOpen={isAIOpen}
-          onClose={() => setIsAIOpen(false)}
-          leases={leases}
-          onAnalysisComplete={() => fetchLayers()}
-        />
+          <ParcelRegisterModal
+            isOpen={isRegisterOpen}
+            onClose={() => setIsRegisterOpen(false)}
+            onRegisterSuccess={() => fetchLayers()}
+          />
 
-        <FieldInspectionSim
-          isOpen={isFieldSimOpen}
-          onClose={() => setIsFieldSimOpen(false)}
-          anomalies={anomalies}
-          onInspectionSubmitted={() => fetchLayers()}
-        />
+          <AISurveillanceAnalyzer
+            isOpen={isAIOpen}
+            onClose={() => setIsAIOpen(false)}
+            leases={leases}
+            onAnalysisComplete={() => fetchLayers()}
+          />
 
-        <LegalNoticeModal
-          anomaly={selectedAnomalyForPDF}
-          isOpen={!!selectedAnomalyForPDF}
-          onClose={() => setSelectedAnomalyForPDF(null)}
-        />
+          <FieldInspectionSim
+            isOpen={isFieldSimOpen}
+            onClose={() => setIsFieldSimOpen(false)}
+            anomalies={anomalies}
+            onInspectionSubmitted={() => fetchLayers()}
+          />
 
-        <ParcelsDetailModal
-          parcels={parcels}
-          isOpen={isParcelsModalOpen}
-          onClose={() => setIsParcelsModalOpen(false)}
-        />
+          <LegalNoticeModal
+            anomaly={selectedAnomalyForPDF}
+            isOpen={!!selectedAnomalyForPDF}
+            onClose={() => setSelectedAnomalyForPDF(null)}
+          />
 
-        <LeasesDetailModal
-          leases={leases}
-          isOpen={isLeasesModalOpen}
-          onClose={() => setIsLeasesModalOpen(false)}
-        />
+          <ParcelsDetailModal
+            parcels={parcels}
+            isOpen={isParcelsModalOpen}
+            onClose={() => setIsParcelsModalOpen(false)}
+          />
 
-        <EncroachmentDetailModal
-          anomalies={anomalies}
-          isOpen={isEncroachmentModalOpen}
-          onClose={() => setIsEncroachmentModalOpen(false)}
-        />
-      </div>
-    </BrowserRouter>
+          <LeasesDetailModal
+            leases={leases}
+            isOpen={isLeasesModalOpen}
+            onClose={() => setIsLeasesModalOpen(false)}
+          />
+
+          <EncroachmentDetailModal
+            anomalies={anomalies}
+            isOpen={isEncroachmentModalOpen}
+            onClose={() => setIsEncroachmentModalOpen(false)}
+          />
+        </div>
+          </BrowserRouter>
+        </AuthProvider>
+      </LiveDataProvider>
+    </ThemeProvider>
   );
 }
