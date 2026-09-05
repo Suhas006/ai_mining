@@ -15,14 +15,34 @@ export const AuthProvider = ({ children }) => {
       });
       return true;
     } 
-    // Fixed User (Surveyor) Account
-    else if (email === 'user@depthfence.in' && password === 'Surveyor2026!') {
-      setUser({
-        email,
-        role: 'surveyor',
-        name: 'Field Surveyor'
-      });
-      return true;
+    // Normal Users (Surveyors) dynamic registration/login
+    else if (email !== 'admin@depthfence.in' && email && password) {
+      const storedUsers = JSON.parse(localStorage.getItem('registered_users') || '{}');
+      
+      // If user exists, check password
+      if (storedUsers[email]) {
+        if (storedUsers[email] === password) {
+          setUser({
+            email,
+            role: 'surveyor',
+            name: 'Field Surveyor'
+          });
+          return true;
+        } else {
+          return false; // Wrong password
+        }
+      } 
+      // If user doesn't exist, register them with this password
+      else {
+        storedUsers[email] = password;
+        localStorage.setItem('registered_users', JSON.stringify(storedUsers));
+        setUser({
+          email,
+          role: 'surveyor',
+          name: 'Field Surveyor'
+        });
+        return true;
+      }
     }
     
     // Reject all other attempts
