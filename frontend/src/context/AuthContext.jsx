@@ -6,12 +6,20 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
   const login = (email, password) => {
-    // Strict authentication: Only allow the designated administrator
+    // Only one specific admin allowed
     if (email === 'admin@depthfence.in' && password === 'SecureAdmin2026!') {
       setUser({
         email,
         role: 'admin',
         name: 'System Administrator'
+      });
+      return true;
+    } else if (email && password) {
+      // Everyone else is a normal surveyor
+      setUser({
+        email,
+        role: 'surveyor',
+        name: 'Field Surveyor'
       });
       return true;
     }
