@@ -6,20 +6,16 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
   const login = (email, password) => {
-    // Basic mock authentication based on email
-    if (email.toLowerCase().includes('admin')) {
+    // Strict authentication: Only allow the designated administrator
+    if (email === 'admin@depthfence.in' && password === 'SecureAdmin2026!') {
       setUser({
         email,
         role: 'admin',
         name: 'System Administrator'
       });
-    } else {
-      setUser({
-        email,
-        role: 'surveyor',
-        name: 'Field Surveyor'
-      });
+      return true;
     }
+    return false;
   };
 
   const logout = () => {

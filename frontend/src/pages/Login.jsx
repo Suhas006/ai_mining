@@ -7,15 +7,22 @@ import { ShieldCheck, Lock, Mail, ArrowRight } from 'lucide-react';
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const { login } = useAuth();
   const { addAuditLog } = useLiveData();
   const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    login(email, password);
-    addAuditLog('System Login', email);
-    navigate('/');
+    setError('');
+    const success = login(email, password);
+    if (success) {
+      addAuditLog('System Login', email);
+      navigate('/');
+    } else {
+      setError('Invalid credentials. Access denied.');
+      addAuditLog('Failed Login Attempt', email || 'unknown');
+    }
   };
 
   return (
@@ -34,6 +41,12 @@ const Login = () => {
               Authenticate to access the Enterprise Grid
             </p>
           </div>
+
+          {error && (
+            <div className="mb-6 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 text-sm text-center font-semibold">
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
