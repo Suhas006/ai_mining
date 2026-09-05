@@ -31,31 +31,12 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
 
     setLoading(true);
 
-    let browserLat = null;
-    let browserLng = null;
-
-    if (navigator.geolocation) {
-      try {
-        const position = await new Promise((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, {
-            enableHighAccuracy: true,
-            timeout: 8000,
-            maximumAge: 0
-          });
-        });
-        browserLat = position.coords.latitude;
-        browserLng = position.coords.longitude;
-      } catch (err) {
-        alert("Please enable location permissions in your browser settings so the AI can map your exact mobile position.");
-      }
-    }
+    // 🌟 THE FIX: BROWSER GPS OVERRIDE REMOVED 🌟
+    // We no longer force the laptop's physical location. 
+    // The backend will now extract the true Lat/Lng directly from the uploaded image's EXIF data.
 
     const formData = new FormData();
     formData.append('file', file);
-    if (browserLat && browserLng) {
-      formData.append('lat', browserLat);
-      formData.append('lng', browserLng);
-    }
 
     try {
       const backendUrl = import.meta.env.VITE_API_BASE_URL || 'https://ai-mining.onrender.com';
@@ -78,7 +59,7 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
       setResults({
         confidence: realConfidence,
         area: realArea,
-        method: backendData.method
+        method: backendData.method || 'GeoAI Raster Vision'
       });
 
       if (onScanSuccess && backendData.anomalies && backendData.anomalies.length > 0) {
@@ -90,43 +71,28 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
 
     } catch (error) {
       console.error("Upload failed:", error);
-      alert(error.response?.data?.details || "Scan failed.");
+      alert(error.response?.data?.details || "Scan failed. Ensure the uploaded image contains valid EXIF GPS data.");
       setLoading(false);
     }
   };
 
   // 🌟 ENTERPRISE GEOJSON EXPORT (SIH26012 INTEROPERABILITY) 🌟
   const downloadGeoJSON = () => {
-    let features = [];
-    if (rawBackendData && rawBackendData.anomalies) {
-      features = rawBackendData.anomalies.map((anomaly, index) => ({
-        type: "Feature",
-        properties: {
-          id: `CADASTRAL-EXTRACT-${index + 1}`,
-          type: "Automated Urban Parcel",
-          area_sqm: rawBackendData.detected_area || 0,
-          ai_confidence: anomaly.confidence
-        },
-        geometry: {
-          type: "Polygon",
-          coordinates: [anomaly.boundary_polygon || [[0, 0], [0, 100], [100, 100], [100, 0]]]
-        }
-      }));
-    } else {
-      features = [{
-        type: "Feature",
-        properties: {
-          id: `CADASTRAL-EXTRACT-1`,
-          type: "Automated Urban Parcel",
-          area_sqm: 1240.5,
-          ai_confidence: 99.9
-        },
-        geometry: {
-          type: "Polygon",
-          coordinates: [[[0, 0], [0, 100], [100, 100], [100, 0]]]
-        }
-      }];
-    }
+    if (!rawBackendData || !rawBackendData.anomalies) return;
+
+    const features = rawBackendData.anomalies.map((anomaly, index) => ({
+      type: "Feature",
+      properties: {
+        id: `CADASTRAL-EXTRACT-${index + 1}`,
+        type: "Automated Urban Parcel",
+        area_sqm: rawBackendData.detected_area || 0,
+        ai_confidence: anomaly.confidence
+      },
+      geometry: {
+        type: "Polygon",
+        coordinates: [anomaly.boundary_polygon || [[0, 0], [0, 100], [100, 100], [100, 0]]]
+      }
+    }));
 
     const geojson = { type: "FeatureCollection", features: features };
     const blob = new Blob([JSON.stringify(geojson, null, 2)], { type: "application/json" });
@@ -212,29 +178,29 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
           {loading ? 'Analyzing Raster...' : 'Scan Image'}
         </button>
 
-        {(file || results) && (
+        {results && (
           <div className="mt-2 mb-auto animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-3">
             <div className="bg-[#10B981]/10 border border-[#10B981]/30 rounded-lg p-4 space-y-3">
               <div className="flex items-center gap-2 text-[#10B981] font-bold text-sm mb-2">
                 <CheckCircle className="w-4 h-4" />
-                {results ? 'Scan Complete' : 'AI Analysis Ready'}
+                Scan Complete
               </div>
               <div className="space-y-1">
                 <div className="flex justify-between text-xs">
                   <span className="text-[#94A3B8]">Confidence:</span>
-                  <span className="text-white font-mono">{results ? results.confidence : '99.9'}%</span>
+                  <span className="text-white font-mono">{results.confidence}%</span>
                 </div>
                 <div className="w-full bg-[#0B0F17] rounded-full h-1.5">
-                  <div className="bg-[#10B981] h-1.5 rounded-full" style={{ width: `${results ? results.confidence : 99.9}%` }}></div>
+                  <div className="bg-[#10B981] h-1.5 rounded-full" style={{ width: `${results.confidence}%` }}></div>
                 </div>
               </div>
               <div className="flex justify-between text-xs pt-1 border-t border-[#10B981]/20">
                 <span className="text-[#94A3B8]">Method:</span>
-                <span className="text-cyan-400 font-mono text-[10px]">{results ? results.method : 'AI Edge Computing'}</span>
+                <span className="text-cyan-400 font-mono text-[10px]">{results.method}</span>
               </div>
               <div className="flex justify-between text-xs pt-2 border-t border-[#10B981]/20">
                 <span className="text-[#94A3B8]">Calculated Area:</span>
-                <span className="text-[#EF4444] font-bold font-mono">{results ? results.area : '1240.5'} sq meters</span>
+                <span className="text-[#EF4444] font-bold font-mono">{results.area} sq meters</span>
               </div>
             </div>
 
@@ -250,7 +216,7 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
 
         <div className="mt-6 pt-4 border-t border-[#1E293B]">
           <button
-            disabled={!file && !results}
+            disabled={!results}
             className="w-full bg-[#1E293B] hover:bg-[#334155] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-all border border-[#334155]"
           >
             <UserCheck className="w-4 h-4 text-[#10B981]" />
