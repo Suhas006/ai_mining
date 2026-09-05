@@ -1,12 +1,13 @@
 import React, { useState, useRef } from 'react';
 import MapView from '../components/MapView';
-import { UploadCloud, CheckCircle, Search, UserCheck, Camera, X, Download } from 'lucide-react';
+import { UploadCloud, CheckCircle, Search, UserCheck, Camera, X, Download, AlertTriangle } from 'lucide-react';
 import axios from 'axios';
 
 const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries, onScanSuccess, onSelectAnomaly, onGeneratePDF, fetchLayers }) => {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
+  const [scanError, setScanError] = useState(null); // 🌟 NEW STATE: For handling EXIF errors beautifully
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [rawBackendData, setRawBackendData] = useState(null);
   const fileInputRef = useRef(null);
@@ -17,12 +18,16 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
     e.preventDefault();
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       setFile(e.dataTransfer.files[0]);
+      setScanError(null);
+      setResults(null);
     }
   };
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
+      setScanError(null);
+      setResults(null);
     }
   };
 
@@ -30,10 +35,8 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
     if (!file) return;
 
     setLoading(true);
-
-    // 🌟 THE FIX: BROWSER GPS OVERRIDE REMOVED 🌟
-    // We no longer force the laptop's physical location. 
-    // The backend will now extract the true Lat/Lng directly from the uploaded image's EXIF data.
+    setScanError(null);
+    setResults(null);
 
     const formData = new FormData();
     formData.append('file', file);
@@ -71,12 +74,12 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
 
     } catch (error) {
       console.error("Upload failed:", error);
-      alert(error.response?.data?.details || "Scan failed. Ensure the uploaded image contains valid EXIF GPS data.");
+      // 🌟 THE FIX: Set error state instead of using an alert popup
+      setScanError(error.response?.data?.details || "MISSING EXIF TELEMETRY: The uploaded raster image does not contain spatial GPS data. Please upload an original photograph or drone capture.");
       setLoading(false);
     }
   };
 
-  // 🌟 ENTERPRISE GEOJSON EXPORT (SIH26012 INTEROPERABILITY) 🌟
   const downloadGeoJSON = () => {
     if (!rawBackendData || !rawBackendData.anomalies) return;
 
@@ -178,7 +181,23 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
           {loading ? 'Analyzing Raster...' : 'Scan Image'}
         </button>
 
-        {results && (
+        {/* 🌟 NEW: STUNNING UI ERROR CARD FOR MISSING EXIF DATA 🌟 */}
+        {scanError && (
+          <div className="mt-2 mb-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 shadow-[0_0_15px_rgba(239,68,68,0.15)]">
+              <div className="flex items-center gap-2 text-red-500 font-bold text-sm mb-2">
+                <AlertTriangle className="w-5 h-5" />
+                Extraction Failed
+              </div>
+              <p className="text-xs text-red-200/80 leading-relaxed font-mono">
+                {scanError}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* RESULTS PANEL (Only shows if successful) */}
+        {results && !scanError && (
           <div className="mt-2 mb-auto animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-3">
             <div className="bg-[#10B981]/10 border border-[#10B981]/30 rounded-lg p-4 space-y-3">
               <div className="flex items-center gap-2 text-[#10B981] font-bold text-sm mb-2">
@@ -204,7 +223,6 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
               </div>
             </div>
 
-            {/* GEOJSON EXPORT BUTTON */}
             <button
               onClick={downloadGeoJSON}
               className="w-full bg-[#0B0F17] border border-[#10B981] hover:bg-[#10B981]/20 text-[#10B981] text-xs font-bold py-2.5 px-3 rounded-lg flex items-center justify-center gap-2 transition-all shadow-md"
