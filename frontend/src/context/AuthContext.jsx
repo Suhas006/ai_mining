@@ -3,16 +3,21 @@ import React, { createContext, useContext, useState } from 'react';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem('depthfence_user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
 
   const login = (email, password) => {
     // Fixed Admin Account
     if (email === 'admin@depthfence.in' && password === 'SecureAdmin2026!') {
-      setUser({
+      const userData = {
         email,
         role: 'admin',
         name: 'System Administrator'
-      });
+      };
+      setUser(userData);
+      localStorage.setItem('depthfence_user', JSON.stringify(userData));
       return true;
     } 
     // Normal Users (Surveyors) dynamic registration/login
@@ -22,11 +27,13 @@ export const AuthProvider = ({ children }) => {
       // If user exists, check password
       if (storedUsers[email]) {
         if (storedUsers[email] === password) {
-          setUser({
+          const userData = {
             email,
             role: 'surveyor',
             name: 'Field Surveyor'
-          });
+          };
+          setUser(userData);
+          localStorage.setItem('depthfence_user', JSON.stringify(userData));
           return true;
         } else {
           return false; // Wrong password
@@ -36,11 +43,13 @@ export const AuthProvider = ({ children }) => {
       else {
         storedUsers[email] = password;
         localStorage.setItem('registered_users', JSON.stringify(storedUsers));
-        setUser({
+        const userData = {
           email,
           role: 'surveyor',
           name: 'Field Surveyor'
-        });
+        };
+        setUser(userData);
+        localStorage.setItem('depthfence_user', JSON.stringify(userData));
         return true;
       }
     }
@@ -51,6 +60,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     setUser(null);
+    localStorage.removeItem('depthfence_user');
   };
 
   return (
