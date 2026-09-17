@@ -95,7 +95,7 @@ const Register = () => {
           )}
 
           {!successMsg && (
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-5" autoComplete="off">
               
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wider">
@@ -125,6 +125,7 @@ const Register = () => {
                     name="fullName"
                     value={formData.fullName}
                     onChange={handleChange}
+                    autoComplete="new-name"
                     className="block w-full pl-10 pr-3 py-3 border border-slate-200 dark:border-[#1E293B] rounded-lg leading-5 bg-slate-50 dark:bg-[#0F172A] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0EA5E9] sm:text-sm transition-all"
                     placeholder="Enter your full name"
                     required
@@ -145,6 +146,7 @@ const Register = () => {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
+                    autoComplete="new-email"
                     className="block w-full pl-10 pr-3 py-3 border border-slate-200 dark:border-[#1E293B] rounded-lg leading-5 bg-slate-50 dark:bg-[#0F172A] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0EA5E9] sm:text-sm transition-all"
                     placeholder="Enter your official email"
                     required
@@ -165,6 +167,7 @@ const Register = () => {
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
+                    autoComplete="new-password"
                     className="block w-full pl-10 pr-3 py-3 border border-slate-200 dark:border-[#1E293B] rounded-lg leading-5 bg-slate-50 dark:bg-[#0F172A] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0EA5E9] sm:text-sm transition-all"
                     placeholder="••••••••"
                     required
