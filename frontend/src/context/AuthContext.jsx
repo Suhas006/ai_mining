@@ -42,9 +42,8 @@ export const AuthProvider = ({ children }) => {
       let res;
       if (formData instanceof FormData) {
         // Handled as multipart/form-data for file uploads (Employee)
-        res = await axios.post(`${API_URL}/api/auth/register`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        // Note: Do NOT set Content-Type manually, Axios needs to set it with the correct boundary
+        res = await axios.post(`${API_URL}/api/auth/register`, formData);
       } else {
         // Normal JSON
         res = await axios.post(`${API_URL}/api/auth/register`, formData);
