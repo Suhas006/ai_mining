@@ -7,6 +7,10 @@ const JWT_SECRET = process.env.JWT_SECRET || 'depthfence_kalam_awards_secret_key
 
 async function register(req, res) {
   try {
+    console.log("--- INCOMING REGISTRATION ---");
+    console.log("Req Body:", req.body);
+    console.log("Req File:", req.file);
+
     const { fullName, officialEmail, employeeId, password, department, role, jurisdictionZone, name, email, registrationType, education, qualifications } = req.body;
     const userEmail = officialEmail || email;
     const userName = fullName || name || 'Official Officer';
