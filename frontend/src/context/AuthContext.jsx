@@ -39,15 +39,10 @@ export const AuthProvider = ({ children }) => {
     try {
       const API_URL = import.meta.env.VITE_API_BASE_URL || '';
       
-      let res;
-      if (formData instanceof FormData) {
-        // Handled as multipart/form-data for file uploads (Employee)
-        // Note: Do NOT set Content-Type manually, Axios needs to set it with the correct boundary
-        res = await axios.post(`${API_URL}/api/auth/register`, formData);
-      } else {
-        // Normal JSON
-        res = await axios.post(`${API_URL}/api/auth/register`, formData);
-      }
+      // Axios automatically determines the correct Content-Type:
+      // - If formData is a plain object, it sends application/json
+      // - If formData is a FormData instance, it sets multipart/form-data with the correct boundary
+      const res = await axios.post(`${API_URL}/api/auth/register`, formData);
 
       // If they are an employee, it returns pending status without a token
       if (res.data && res.data.status === 'Pending') {

@@ -17,9 +17,12 @@ const UserSchema = new mongoose.Schema({
       'District Mining Officer',
       'Revenue Surveyor (ULPIN)',
       'Field Inspection Squad',
-      'System Administrator'
+      'System Administrator',
+      'employee',
+      'user',
+      'admin'
     ],
-    default: 'District Mining Officer'
+    default: 'user'
   },
   jurisdictionZone: {
     type: String,

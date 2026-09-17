@@ -7,7 +7,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'depthfence_kalam_awards_secret_key
 
 async function register(req, res) {
   try {
-    const { fullName, officialEmail, employeeId, password, department, role, jurisdictionZone, name, email, registrationType, education } = req.body;
+    const { fullName, officialEmail, employeeId, password, department, role, jurisdictionZone, name, email, registrationType, education, qualifications } = req.body;
     const userEmail = officialEmail || email;
     const userName = fullName || name || 'Official Officer';
 
@@ -22,14 +22,13 @@ async function register(req, res) {
 
     const passwordHash = await bcrypt.hash(password, 10);
     
-    // Determine status and photoUrl based on registrationType
-    const isEmployee = registrationType === 'Employee';
+    // Determine status and photoUrl based on role or registrationType
+    const isEmployee = role === 'employee' || registrationType === 'Employee';
     const status = isEmployee ? 'Pending' : 'Active';
     
     let photoUrl = '';
     if (isEmployee && req.file) {
       // For simplicity in this env, store photo as base64 or a static path. 
-      // If we use memoryStorage, we can convert to base64.
       photoUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
     }
 
@@ -39,11 +38,11 @@ async function register(req, res) {
       employeeId: employeeId || `TN-MIN-${Math.floor(1000 + Math.random() * 9000)}`,
       passwordHash,
       department: department || 'Geology & Mining',
-      role: role || 'District Mining Officer',
+      role: role || (registrationType === 'Employee' ? 'employee' : 'user'),
       jurisdictionZone: jurisdictionZone || 'Karur Surveillance Zone',
-      registrationType: registrationType || 'User',
+      registrationType: registrationType || (role === 'employee' ? 'Employee' : 'User'),
       status,
-      education: education || '',
+      education: education || qualifications || '',
       photoUrl,
       lastLoginIp: req.ip || '192.168.1.104',
       lastLoginAt: new Date()

@@ -36,18 +36,18 @@ const Register = () => {
     let submitData;
     if (formData.registrationType === 'Employee') {
       submitData = new FormData();
-      submitData.append('fullName', formData.fullName);
+      submitData.append('name', formData.fullName);
       submitData.append('email', formData.email);
       submitData.append('password', formData.password);
-      submitData.append('registrationType', formData.registrationType);
-      submitData.append('education', formData.education);
+      submitData.append('role', 'employee');
+      submitData.append('qualifications', formData.education || 'N/A');
       if (formData.photo) submitData.append('photo', formData.photo);
     } else {
       submitData = {
-        fullName: formData.fullName,
+        name: formData.fullName,
         email: formData.email,
         password: formData.password,
-        registrationType: formData.registrationType
+        role: 'user'
       };
     }
 
