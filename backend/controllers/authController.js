@@ -11,7 +11,7 @@ async function register(req, res) {
     console.log("Req Body:", req.body);
     console.log("Req File:", req.file);
 
-    const { fullName, officialEmail, employeeId, password, department, role, jurisdictionZone, name, email, registrationType, education, qualifications } = req.body;
+    const { fullName, officialEmail, employeeId, password, department, jurisdictionZone, name, email, role, qualifications } = req.body;
     const userEmail = officialEmail || email;
     const userName = fullName || name || 'Official Officer';
 
@@ -26,14 +26,20 @@ async function register(req, res) {
 
     const passwordHash = await bcrypt.hash(password, 10);
     
-    // Determine status and photoUrl based on role or registrationType
-    const isEmployee = role === 'employee' || registrationType === 'Employee';
-    const status = isEmployee ? 'Pending' : 'Active';
-    
-    let photoUrl = '';
-    if (isEmployee && req.file) {
-      // For simplicity in this env, store photo as base64 or a static path. 
-      photoUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+    // Strict separation of User vs Employee logic
+    let status = 'Active';
+    let employeeData = {
+      education: '',
+      photoUrl: ''
+    };
+
+    if (role === 'employee') {
+      status = 'Pending';
+      employeeData.education = qualifications || '';
+      
+      if (req.file && req.file.buffer) {
+        employeeData.photoUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+      }
     }
 
     const user = await User.create({
@@ -42,12 +48,12 @@ async function register(req, res) {
       employeeId: employeeId || `TN-MIN-${Math.floor(1000 + Math.random() * 9000)}`,
       passwordHash,
       department: department || 'Geology & Mining',
-      role: role || (registrationType === 'Employee' ? 'employee' : 'user'),
+      role: role || 'user',
       jurisdictionZone: jurisdictionZone || 'Karur Surveillance Zone',
-      registrationType: registrationType || (role === 'employee' ? 'Employee' : 'User'),
+      registrationType: role === 'employee' ? 'Employee' : 'User',
       status,
-      education: education || qualifications || '',
-      photoUrl,
+      education: employeeData.education,
+      photoUrl: employeeData.photoUrl,
       lastLoginIp: req.ip || '192.168.1.104',
       lastLoginAt: new Date()
     });
