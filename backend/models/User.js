@@ -32,6 +32,20 @@ const UserSchema = new mongoose.Schema({
     default: 'Karur Surveillance Zone'
   },
   
+  // New fields for Role-Based Registration & Approval Queue
+  status: {
+    type: String,
+    enum: ['Pending', 'Active'],
+    default: 'Active'
+  },
+  registrationType: {
+    type: String,
+    enum: ['User', 'Employee', 'Admin'],
+    default: 'User'
+  },
+  education: { type: String }, // For employees
+  photoUrl: { type: String }, // For employees
+
   lastLoginIp: { type: String, default: '192.168.1.104' },
   lastLoginAt: { type: Date, default: Date.now },
   createdAt: { type: Date, default: Date.now }

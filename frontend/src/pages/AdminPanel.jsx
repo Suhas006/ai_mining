@@ -1,11 +1,81 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useLiveData } from '../context/LiveDataContext';
-import { ShieldAlert, Users, Server, Globe, AlertTriangle, Terminal, Lock, Download, Map as MapIcon, Box } from 'lucide-react';
+import { ShieldAlert, Users, Server, Globe, AlertTriangle, Terminal, Lock, Download, Map as MapIcon, Box, CheckCircle, XCircle, Trash2 } from 'lucide-react';
 
 const AdminPanel = () => {
   const { user } = useAuth();
   const { auditLogs, totalScans, ulpinsMinted } = useLiveData();
+  
+  const [pendingEmployees, setPendingEmployees] = useState([]);
+  const [activeUsers, setActiveUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+
+  const fetchManagementData = async () => {
+    try {
+      const token = localStorage.getItem('depthfence_token');
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      
+      const [pendingRes, activeRes] = await Promise.all([
+        axios.get(`${API_URL}/api/admin/employees/pending`, config),
+        axios.get(`${API_URL}/api/admin/employees/active`, config)
+      ]);
+      
+      setPendingEmployees(pendingRes.data);
+      setActiveUsers(activeRes.data);
+    } catch (err) {
+      console.error('Error fetching admin data', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user && user.role === 'admin') {
+      fetchManagementData();
+    }
+  }, [user]);
+
+  const handleApprove = async (id) => {
+    try {
+      const token = localStorage.getItem('depthfence_token');
+      await axios.post(`${API_URL}/api/admin/employees/${id}/approve`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchManagementData();
+    } catch (err) {
+      console.error('Approval failed', err);
+    }
+  };
+
+  const handleReject = async (id) => {
+    if (!window.confirm("Are you sure you want to reject this request?")) return;
+    try {
+      const token = localStorage.getItem('depthfence_token');
+      await axios.post(`${API_URL}/api/admin/employees/${id}/reject`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchManagementData();
+    } catch (err) {
+      console.error('Rejection failed', err);
+    }
+  };
+
+  const handleRevoke = async (id) => {
+    if (!window.confirm("Are you sure you want to revoke this user's access?")) return;
+    try {
+      const token = localStorage.getItem('depthfence_token');
+      await axios.delete(`${API_URL}/api/admin/users/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchManagementData();
+    } catch (err) {
+      console.error('Revoke failed', err);
+    }
+  };
 
   // 403 Access Denied Guard
   if (!user || user.role !== 'admin') {
@@ -160,6 +230,135 @@ const AdminPanel = () => {
               </table>
             </div>
           </div>
+        </div>
+        
+        {/* User & Employee Management */}
+        <div className="mt-8 space-y-8">
+          
+          {/* Pending Approvals */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-amber-500" />
+                Pending Employee Approvals
+                {pendingEmployees.length > 0 && (
+                  <span className="ml-2 px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-500 text-xs font-bold">
+                    {pendingEmployees.length}
+                  </span>
+                )}
+              </h3>
+            </div>
+            
+            <div className="bg-white dark:bg-[#131B2B] border border-amber-500/20 rounded-xl overflow-hidden shadow-sm dark:shadow-2xl">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-amber-50 dark:bg-[#0F172A] border-b border-amber-200 dark:border-amber-500/20 text-xs uppercase tracking-wider text-slate-500 dark:text-[#94A3B8]">
+                      <th className="px-6 py-4 font-bold">Employee Name</th>
+                      <th className="px-6 py-4 font-bold">Email</th>
+                      <th className="px-6 py-4 font-bold">Education</th>
+                      <th className="px-6 py-4 font-bold">Photo ID</th>
+                      <th className="px-6 py-4 font-bold text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-sm text-slate-700 dark:text-[#E2E8F0] divide-y divide-slate-100 dark:divide-[#1E293B]">
+                    {pendingEmployees.length === 0 ? (
+                      <tr>
+                        <td colSpan="5" className="px-6 py-8 text-center text-slate-500 dark:text-[#94A3B8]">No pending approvals.</td>
+                      </tr>
+                    ) : (
+                      pendingEmployees.map((emp) => (
+                        <tr key={emp._id} className="hover:bg-slate-50 dark:hover:bg-[#1E293B]/50 transition-colors">
+                          <td className="px-6 py-4 font-semibold">{emp.fullName}</td>
+                          <td className="px-6 py-4 text-slate-500 dark:text-[#94A3B8]">{emp.officialEmail}</td>
+                          <td className="px-6 py-4 text-xs">{emp.education || 'N/A'}</td>
+                          <td className="px-6 py-4">
+                            {emp.photoUrl ? (
+                              <a href={emp.photoUrl} target="_blank" rel="noreferrer" className="text-[#0EA5E9] hover:underline text-xs flex items-center gap-1">
+                                <Box className="w-3 h-3" /> View ID
+                              </a>
+                            ) : (
+                              <span className="text-slate-400 text-xs">No ID</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 flex items-center justify-end gap-2">
+                            <button 
+                              onClick={() => handleApprove(emp._id)}
+                              className="p-1.5 bg-green-500/10 hover:bg-green-500/20 text-green-500 rounded transition-colors"
+                              title="Approve"
+                            >
+                              <CheckCircle className="w-5 h-5" />
+                            </button>
+                            <button 
+                              onClick={() => handleReject(emp._id)}
+                              className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded transition-colors"
+                              title="Reject"
+                            >
+                              <XCircle className="w-5 h-5" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          {/* Active Directory */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Users className="w-5 h-5 text-[#0EA5E9]" />
+                Active Directory
+              </h3>
+            </div>
+            
+            <div className="bg-white dark:bg-[#131B2B] border border-slate-200 dark:border-[#0EA5E9]/20 rounded-xl overflow-hidden shadow-sm dark:shadow-2xl">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 dark:bg-[#0F172A] border-b border-slate-200 dark:border-[#0EA5E9]/20 text-xs uppercase tracking-wider text-slate-500 dark:text-[#94A3B8]">
+                      <th className="px-6 py-4 font-bold">User Name</th>
+                      <th className="px-6 py-4 font-bold">Email</th>
+                      <th className="px-6 py-4 font-bold">Role</th>
+                      <th className="px-6 py-4 font-bold text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-sm text-slate-700 dark:text-[#E2E8F0] divide-y divide-slate-100 dark:divide-[#1E293B]">
+                    {activeUsers.length === 0 ? (
+                      <tr>
+                        <td colSpan="4" className="px-6 py-8 text-center text-slate-500 dark:text-[#94A3B8]">No active users.</td>
+                      </tr>
+                    ) : (
+                      activeUsers.map((u) => (
+                        <tr key={u._id} className="hover:bg-slate-50 dark:hover:bg-[#1E293B]/50 transition-colors">
+                          <td className="px-6 py-4 font-semibold">{u.fullName}</td>
+                          <td className="px-6 py-4 text-slate-500 dark:text-[#94A3B8]">{u.officialEmail}</td>
+                          <td className="px-6 py-4">
+                            <span className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded text-xs">
+                              {u.registrationType || 'User'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 flex items-center justify-end">
+                            <button 
+                              onClick={() => handleRevoke(u._id)}
+                              className="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded text-xs font-bold transition-colors flex items-center gap-1"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              Revoke
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          
         </div>
         
       </div>

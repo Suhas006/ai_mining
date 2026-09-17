@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState } from 'react';
 
+import axios from 'axios';
+
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -8,54 +10,68 @@ export const AuthProvider = ({ children }) => {
     return savedUser ? JSON.parse(savedUser) : null;
   });
 
-  const login = (email, password) => {
-    // Fixed Admin Account
-    if (email === 'admin@depthfence.in' && password === 'SecureAdmin2026!') {
-      const userData = {
+  const login = async (email, password) => {
+    try {
+      const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+      const res = await axios.post(`${API_URL}/api/auth/login`, {
         email,
-        role: 'admin',
-        name: 'System Administrator'
-      };
-      setUser(userData);
-      localStorage.setItem('depthfence_user', JSON.stringify(userData));
-      return true;
-    } 
-    // Normal Users (Surveyors) dynamic registration/login
-    else if (email !== 'admin@depthfence.in' && email && password) {
-      const storedUsers = JSON.parse(localStorage.getItem('registered_users') || '{}');
-      
-      // If user exists, check password
-      if (storedUsers[email]) {
-        if (storedUsers[email] === password) {
-          const userData = {
-            email,
-            role: 'surveyor',
-            name: 'Field Surveyor'
-          };
-          setUser(userData);
-          localStorage.setItem('depthfence_user', JSON.stringify(userData));
-          return true;
-        } else {
-          return false; // Wrong password
-        }
-      } 
-      // If user doesn't exist, register them with this password
-      else {
-        storedUsers[email] = password;
-        localStorage.setItem('registered_users', JSON.stringify(storedUsers));
-        const userData = {
-          email,
-          role: 'surveyor',
-          name: 'Field Surveyor'
-        };
+        password
+      });
+
+      if (res.data && res.data.user) {
+        const userData = { ...res.data.user, token: res.data.token };
         setUser(userData);
         localStorage.setItem('depthfence_user', JSON.stringify(userData));
-        return true;
+        localStorage.setItem('depthfence_token', res.data.token); // Save token for protected routes
+        return { success: true, user: userData };
       }
+      return { success: false, error: 'Invalid response from server' };
+    } catch (err) {
+      console.error('Login error:', err.response?.data || err.message);
+      return { 
+        success: false, 
+        error: err.response?.data?.error || 'Failed to authenticate.' 
+      };
     }
-    
-    // Reject all other attempts
-    return false;
+  };
+
+  const register = async (formData) => {
+    try {
+      const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+      
+      let res;
+      if (formData instanceof FormData) {
+        // Handled as multipart/form-data for file uploads (Employee)
+        res = await axios.post(`${API_URL}/api/auth/register`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      } else {
+        // Normal JSON
+        res = await axios.post(`${API_URL}/api/auth/register`, formData);
+      }
+
+      // If they are an employee, it returns pending status without a token
+      if (res.data && res.data.status === 'Pending') {
+        return { success: true, pending: true, msg: res.data.msg };
+      }
+
+      // Auto login for normal user
+      if (res.data && res.data.user) {
+        const userData = { ...res.data.user, token: res.data.token };
+        setUser(userData);
+        localStorage.setItem('depthfence_user', JSON.stringify(userData));
+        localStorage.setItem('depthfence_token', res.data.token);
+        return { success: true, user: userData };
+      }
+
+      return { success: false, error: 'Registration failed.' };
+    } catch (err) {
+      console.error('Registration error:', err.response?.data || err.message);
+      return { 
+        success: false, 
+        error: err.response?.data?.error || 'Failed to register.' 
+      };
+    }
   };
 
   const logout = () => {
@@ -64,7 +80,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

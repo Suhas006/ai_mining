@@ -48,6 +48,27 @@ const Sidebar = () => {
             Navigation
           </div>
 
+          {user && user.role === 'admin' && (
+            <div className="mb-4 pb-4 border-b border-slate-200 dark:border-[#1E293B]">
+              <div className="text-[10px] font-bold text-[#F59E0B] uppercase tracking-wider mb-2 px-2">
+                Administrator
+              </div>
+              <NavLink
+                to="/admin-panel"
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm font-bold ${
+                    isActive
+                      ? 'bg-[#F59E0B]/10 text-slate-900 dark:text-white border border-[#F59E0B]/30 shadow-[inset_0_0_10px_rgba(245,158,11,0.2)]'
+                      : 'text-[#F59E0B] hover:bg-[#F59E0B]/5 hover:text-[#F59E0B] dark:hover:text-white border border-transparent'
+                  }`
+                }
+              >
+                <ShieldAlert className="w-5 h-5" />
+                Admin Access
+              </NavLink>
+            </div>
+          )}
+
           <NavLink
             to="/"
             className={({ isActive }) =>
@@ -75,27 +96,6 @@ const Sidebar = () => {
             <Settings className="w-5 h-5 text-[#10B981]" />
             System Settings
           </NavLink>
-
-          {user && user.role === 'admin' && (
-            <div className="pt-4 mt-4 border-t border-slate-200 dark:border-[#1E293B]">
-              <div className="text-[10px] font-bold text-[#F59E0B] uppercase tracking-wider mb-2 px-2">
-                Administrator
-              </div>
-              <NavLink
-                to="/admin-panel"
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm font-bold ${
-                    isActive
-                      ? 'bg-[#F59E0B]/10 text-slate-900 dark:text-white border border-[#F59E0B]/30 shadow-[inset_0_0_10px_rgba(245,158,11,0.2)]'
-                      : 'text-[#F59E0B] hover:bg-[#F59E0B]/5 hover:text-[#F59E0B] dark:hover:text-white border border-transparent'
-                  }`
-                }
-              >
-                <ShieldAlert className="w-5 h-5" />
-                Admin Access
-              </NavLink>
-            </div>
-          )}
         </nav>
 
         <div className="p-4 border-t border-slate-200 dark:border-[#1E293B] space-y-2 min-w-[16rem]">

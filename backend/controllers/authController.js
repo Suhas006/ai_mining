@@ -7,7 +7,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'depthfence_kalam_awards_secret_key
 
 async function register(req, res) {
   try {
-    const { fullName, officialEmail, employeeId, password, department, role, jurisdictionZone, name, email } = req.body;
+    const { fullName, officialEmail, employeeId, password, department, role, jurisdictionZone, name, email, registrationType, education } = req.body;
     const userEmail = officialEmail || email;
     const userName = fullName || name || 'Official Officer';
 
@@ -21,6 +21,18 @@ async function register(req, res) {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
+    
+    // Determine status and photoUrl based on registrationType
+    const isEmployee = registrationType === 'Employee';
+    const status = isEmployee ? 'Pending' : 'Active';
+    
+    let photoUrl = '';
+    if (isEmployee && req.file) {
+      // For simplicity in this env, store photo as base64 or a static path. 
+      // If we use memoryStorage, we can convert to base64.
+      photoUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+    }
+
     const user = await User.create({
       fullName: userName,
       officialEmail: userEmail,
@@ -29,6 +41,10 @@ async function register(req, res) {
       department: department || 'Geology & Mining',
       role: role || 'District Mining Officer',
       jurisdictionZone: jurisdictionZone || 'Karur Surveillance Zone',
+      registrationType: registrationType || 'User',
+      status,
+      education: education || '',
+      photoUrl,
       lastLoginIp: req.ip || '192.168.1.104',
       lastLoginAt: new Date()
     });
@@ -38,6 +54,14 @@ async function register(req, res) {
       msg: `New officer registered: ${user.fullName} (${user.employeeId}) via Grid Portal.`,
       type: 'info'
     });
+
+    if (isEmployee) {
+      // Do not return token for pending employees
+      return res.status(201).json({
+        msg: 'Request sent to Administrator for approval.',
+        status: 'Pending'
+      });
+    }
 
     const token = jwt.sign(
       { id: user._id, role: user.role, name: user.fullName, email: user.officialEmail },
@@ -56,6 +80,7 @@ async function register(req, res) {
         department: user.department,
         role: user.role,
         jurisdiction: user.jurisdictionZone,
+        status: user.status,
         lastLoginIp: user.lastLoginIp,
         lastLoginAt: user.lastLoginAt
       }
@@ -69,32 +94,62 @@ async function register(req, res) {
 async function login(req, res) {
   try {
     const { officialEmail, email, password } = req.body;
-    const userEmail = officialEmail || email;
+    const userEmail = (officialEmail || email || '').toLowerCase();
 
     if (!userEmail || !password) {
       return res.status(400).json({ error: 'Official email and password are required.' });
     }
 
-    let user = await User.findOne({ officialEmail: userEmail });
-    if (!user) {
-      // Auto-create default officer for demo session if missing
-      const defaultPass = await bcrypt.hash(password, 10);
-      user = await User.create({
-        fullName: 'R. Raman',
-        officialEmail: userEmail,
-        employeeId: 'TN-MIN-8472',
-        passwordHash: defaultPass,
-        department: 'Geology & Mining',
-        role: 'District Mining Officer',
-        jurisdictionZone: 'Karur Surveillance Zone',
-        lastLoginIp: req.ip || '192.168.1.104',
-        lastLoginAt: new Date()
+    // 1. Check for Environment Variable Admin Login
+    const adminEmailEnv = process.env.ADMIN_EMAIL ? process.env.ADMIN_EMAIL.toLowerCase() : null;
+    const adminPassEnv = process.env.ADMIN_PASSWORD;
+
+    if (adminEmailEnv && adminPassEnv && userEmail === adminEmailEnv && password === adminPassEnv) {
+      const token = jwt.sign(
+        { id: 'admin-env-id', role: 'admin', name: 'System Administrator', email: userEmail },
+        JWT_SECRET,
+        { expiresIn: '8h' }
+      );
+      
+      await AuditLog.create({
+        time: new Date().toLocaleTimeString('en-GB'),
+        msg: `Environment Administrator Authenticated (IP ${req.ip || '192.168.1.104'}).`,
+        type: 'success'
       });
-    } else {
-      user.lastLoginIp = req.ip || '192.168.1.104';
-      user.lastLoginAt = new Date();
-      await user.save();
+
+      return res.json({
+        token,
+        msg: 'Administrator Login Authenticated.',
+        user: {
+          id: 'admin-env-id',
+          name: 'System Administrator',
+          email: userEmail,
+          role: 'admin',
+          status: 'Active'
+        }
+      });
     }
+
+    // 2. Normal User DB Login
+    let user = await User.findOne({ officialEmail: userEmail });
+    
+    // Remove auto-create demo user to enforce actual registration security
+    if (!user) {
+       return res.status(401).json({ error: 'Invalid credentials or user not found.' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.passwordHash);
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Invalid credentials.' });
+    }
+
+    if (user.status === 'Pending') {
+      return res.status(403).json({ error: 'Account pending approval by Administrator.' });
+    }
+
+    user.lastLoginIp = req.ip || '192.168.1.104';
+    user.lastLoginAt = new Date();
+    await user.save();
 
     await AuditLog.create({
       time: new Date().toLocaleTimeString('en-GB'),
@@ -119,6 +174,7 @@ async function login(req, res) {
         department: user.department,
         role: user.role,
         jurisdiction: user.jurisdictionZone,
+        status: user.status,
         lastLoginIp: user.lastLoginIp,
         lastLoginAt: user.lastLoginAt
       }

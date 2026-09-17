@@ -13,6 +13,7 @@ const { registerParcel, getParcels, searchParcels } = require('./controllers/par
 const { analyzeRaster, getAnomalies, updateAnomalyStatus, assignAnomalyOfficer } = require('./controllers/surveillanceController');
 const { submitInspection, getPendingInspections } = require('./controllers/inspectionController');
 const { generateLegalNotice } = require('./controllers/reportController');
+const { getPendingEmployees, getActiveUsers, approveEmployee, rejectEmployee, revokeAccess } = require('./controllers/adminController');
 const { authMiddleware } = require('./middleware/authMiddleware');
 
 // Models
@@ -56,9 +57,23 @@ app.get('/', (req, res) => {
   res.status(200).json({ status: "Online", system: "AI Land Survey API Server", version: "1.0.0" });
 });
 
-app.post('/api/auth/register', register);
+app.post('/api/auth/register', upload.single('photo'), register);
 app.post('/api/auth/login', login);
 app.get('/api/auth/me', authMiddleware, getMe);
+
+// Admin Routes
+const adminMiddleware = (req, res, next) => {
+  if (req.user && req.user.role === 'admin') {
+    next();
+  } else {
+    res.status(403).json({ error: 'Access denied. Admin only.' });
+  }
+};
+app.get('/api/admin/employees/pending', authMiddleware, adminMiddleware, getPendingEmployees);
+app.get('/api/admin/employees/active', authMiddleware, adminMiddleware, getActiveUsers);
+app.post('/api/admin/employees/:id/approve', authMiddleware, adminMiddleware, approveEmployee);
+app.post('/api/admin/employees/:id/reject', authMiddleware, adminMiddleware, rejectEmployee);
+app.delete('/api/admin/users/:id', authMiddleware, adminMiddleware, revokeAccess);
 
 app.post('/api/parcels/register', registerParcel);
 app.get('/api/parcels', getParcels);

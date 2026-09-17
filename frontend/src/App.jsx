@@ -13,6 +13,7 @@ import Scanner2D from './pages/Scanner2D';
 
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import Settings from './pages/Settings';
 import Profile from './pages/Profile';
 import AdminPanel from './pages/AdminPanel';
@@ -89,6 +90,7 @@ export default function App() {
             <Routes>
               <Route path="/" element={<ProtectedRoute><LandingPage /></ProtectedRoute>} />
               <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/admin-panel" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />

@@ -12,15 +12,15 @@ const Login = () => {
   const { addAuditLog } = useLiveData();
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    const success = login(email, password);
-    if (success) {
+    const res = await login(email, password);
+    if (res.success) {
       addAuditLog('System Login', email);
       navigate('/');
     } else {
-      setError('Invalid credentials. Access denied.');
+      setError(res.error || 'Invalid credentials. Access denied.');
       addAuditLog('Failed Login Attempt', email || 'unknown');
     }
   };
@@ -94,6 +94,13 @@ const Login = () => {
               AUTHENTICATE
               <ArrowRight className="w-4 h-4" />
             </button>
+
+            <div className="text-center mt-4 text-sm text-slate-500 dark:text-[#94A3B8]">
+              Don't have an account?{' '}
+              <a href="/register" className="text-[#0EA5E9] hover:underline font-semibold">
+                Request Security Clearance
+              </a>
+            </div>
           </form>
         </div>
       </div>
