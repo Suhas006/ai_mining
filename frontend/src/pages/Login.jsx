@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLiveData } from '../context/LiveDataContext';
 import { ShieldCheck, Lock, Mail, ArrowRight } from 'lucide-react';
@@ -97,9 +97,9 @@ const Login = () => {
 
             <div className="text-center mt-4 text-sm text-slate-500 dark:text-[#94A3B8]">
               Don't have an account?{' '}
-              <a href="/register" className="text-[#0EA5E9] hover:underline font-semibold">
+              <Link to="/register" className="text-[#0EA5E9] hover:underline font-semibold">
                 Request Security Clearance
-              </a>
+              </Link>
             </div>
           </form>
         </div>
