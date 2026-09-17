@@ -33,22 +33,17 @@ const Register = () => {
     setSuccessMsg('');
     setIsSubmitting(true);
 
-    let submitData;
-    if (formData.registrationType === 'Employee') {
-      submitData = new FormData();
-      submitData.append('name', formData.fullName);
-      submitData.append('email', formData.email);
-      submitData.append('password', formData.password);
+    const submitData = new FormData();
+    submitData.append('name', formData.fullName);
+    submitData.append('email', formData.email);
+    submitData.append('password', formData.password);
+
+    if (formData.registrationType === 'User') {
+      submitData.append('role', 'user');
+    } else {
       submitData.append('role', 'employee');
       submitData.append('qualifications', formData.education || 'N/A');
       if (formData.photo) submitData.append('photo', formData.photo);
-    } else {
-      submitData = {
-        name: formData.fullName,
-        email: formData.email,
-        password: formData.password,
-        role: 'user'
-      };
     }
 
     const res = await register(submitData);
