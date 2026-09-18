@@ -35,11 +35,11 @@ const MyProfile = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('depthfence_token');
-      const res = await axios.put(`${API_URL}/api/users/profile/${user.id || user._id}`, formData, {
+      const response = await axios.put(`${API_URL}/api/users/profile/${user._id}`, formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      if (res.data.status === 'pending') {
+      if (response.data.status === 'pending') {
         setIsPending(true);
         setMessage({ type: 'warning', text: 'Your requested changes have been sent to the System Administrator for security clearance.' });
       } else {
