@@ -11,7 +11,7 @@ async function register(req, res) {
     console.log("Req Body:", req.body);
     console.log("Req File:", req.file);
 
-    const { fullName, officialEmail, employeeId, password, department, jurisdictionZone, name, email, role, qualifications } = req.body;
+    const { fullName, officialEmail, employeeId, password, department, jurisdictionZone, name, email, role, qualifications, phone, dob, gender, address, emergencyContactName, emergencyContactPhone, jobTitle } = req.body;
     const userEmail = officialEmail || email;
     const userName = fullName || name || 'Official Officer';
 
@@ -30,12 +30,26 @@ async function register(req, res) {
     let status = 'Active';
     let employeeData = {
       education: '',
-      photoUrl: ''
+      photoUrl: '',
+      phone: '',
+      dob: null,
+      gender: '',
+      address: '',
+      emergencyContactName: '',
+      emergencyContactPhone: '',
+      jobTitle: ''
     };
 
     if (role === 'employee') {
       status = 'Pending';
       employeeData.education = qualifications || '';
+      employeeData.phone = phone || '';
+      employeeData.dob = dob || null;
+      employeeData.gender = gender || '';
+      employeeData.address = address || '';
+      employeeData.emergencyContactName = emergencyContactName || '';
+      employeeData.emergencyContactPhone = emergencyContactPhone || '';
+      employeeData.jobTitle = jobTitle || '';
       
       if (req.file && req.file.buffer) {
         employeeData.photoUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
@@ -54,6 +68,15 @@ async function register(req, res) {
       status,
       education: employeeData.education,
       photoUrl: employeeData.photoUrl,
+      phone: employeeData.phone,
+      dob: employeeData.dob,
+      gender: employeeData.gender,
+      address: employeeData.address,
+      emergencyContact: {
+        name: employeeData.emergencyContactName,
+        phone: employeeData.emergencyContactPhone
+      },
+      jobTitle: employeeData.jobTitle,
       lastLoginIp: req.ip || '192.168.1.104',
       lastLoginAt: new Date()
     });

@@ -48,6 +48,15 @@ const UserSchema = new mongoose.Schema({
   },
   education: { type: String }, // For employees
   photoUrl: { type: String }, // For employees
+  phone: { type: String },
+  dob: { type: Date },
+  gender: { type: String, enum: ['Male', 'Female', 'Other', 'Prefer not to say'] },
+  address: { type: String },
+  emergencyContact: {
+    name: { type: String },
+    phone: { type: String }
+  },
+  jobTitle: { type: String },
 
   lastLoginIp: { type: String, default: '192.168.1.104' },
   lastLoginAt: { type: Date, default: Date.now },
