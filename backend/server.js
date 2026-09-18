@@ -13,7 +13,7 @@ const { registerParcel, getParcels, searchParcels } = require('./controllers/par
 const { analyzeRaster, getAnomalies, updateAnomalyStatus, assignAnomalyOfficer } = require('./controllers/surveillanceController');
 const { submitInspection, getPendingInspections } = require('./controllers/inspectionController');
 const { generateLegalNotice } = require('./controllers/reportController');
-const { getPendingEmployees, getActiveUsers, approveEmployee, rejectEmployee, revokeAccess } = require('./controllers/adminController');
+const { getPendingEmployees, getActiveUsers, approveEmployee, rejectEmployee, deleteUser } = require('./controllers/adminController');
 const { authMiddleware } = require('./middleware/authMiddleware');
 
 // Models
@@ -73,7 +73,7 @@ app.get('/api/admin/employees/pending', authMiddleware, adminMiddleware, getPend
 app.get('/api/admin/employees/active', authMiddleware, adminMiddleware, getActiveUsers);
 app.post('/api/admin/employees/:id/approve', authMiddleware, adminMiddleware, approveEmployee);
 app.post('/api/admin/employees/:id/reject', authMiddleware, adminMiddleware, rejectEmployee);
-app.delete('/api/admin/users/:id', authMiddleware, adminMiddleware, revokeAccess);
+app.delete('/api/admin/users/:id', authMiddleware, adminMiddleware, deleteUser);
 
 app.post('/api/parcels/register', registerParcel);
 app.get('/api/parcels', getParcels);

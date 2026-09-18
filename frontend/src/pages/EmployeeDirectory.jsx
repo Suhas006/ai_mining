@@ -67,17 +67,20 @@ const EmployeeDirectory = () => {
     }
   };
 
-  const handleRevoke = async (id) => {
-    if (!window.confirm("Are you sure you want to revoke this user's access?")) return;
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm("Are you sure you want to permanently delete this user?")) return;
     try {
       const token = localStorage.getItem('depthfence_token');
-      await axios.delete(`${API_URL}/api/admin/users/${id}`, {
+      await axios.delete(`${API_URL}/api/admin/users/${userId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setSelectedEmployee(null);
-      fetchManagementData();
+      // Update local state instantly without page refresh
+      setActiveUsers(prev => prev.filter(u => u._id !== userId));
+      setPendingEmployees(prev => prev.filter(u => u._id !== userId));
+      // Automatically close modal if deleted user is currently open
+      setSelectedEmployee(prev => (prev && prev._id === userId) ? null : prev);
     } catch (err) {
-      console.error('Revoke failed', err);
+      console.error('Delete failed', err);
     }
   };
 
@@ -224,7 +227,7 @@ const EmployeeDirectory = () => {
             {selectedEmployee.status === 'Active' && (
               <div className="px-6 py-4 bg-slate-50 dark:bg-[#131B2B] border-t border-slate-200 dark:border-slate-800 flex justify-end gap-4">
                 <button 
-                  onClick={() => handleRevoke(selectedEmployee._id)}
+                  onClick={() => handleDeleteUser(selectedEmployee._id)}
                   className="flex items-center gap-2 px-6 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-500 font-bold rounded-lg transition-colors"
                 >
                   <Trash2 className="w-5 h-5" /> {selectedEmployee.registrationType === 'Employee' ? 'REVOKE ACCESS' : 'DELETE USER'}
@@ -360,6 +363,12 @@ const EmployeeDirectory = () => {
                             className="px-4 py-2 bg-[#0EA5E9]/10 group-hover:bg-[#0EA5E9]/20 text-[#0EA5E9] font-bold rounded-lg transition-colors flex items-center gap-2 text-xs"
                           >
                             <Eye className="w-4 h-4" /> View Profile
+                          </button>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); handleDeleteUser(u._id); }}
+                            className="px-4 py-2 bg-red-500/10 group-hover:bg-red-500/20 text-red-600 dark:text-red-500 font-bold rounded-lg transition-colors flex items-center gap-2 text-xs"
+                          >
+                            <Trash2 className="w-4 h-4" /> Delete
                           </button>
                         </td>
                       </tr>

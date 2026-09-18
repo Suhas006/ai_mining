@@ -87,14 +87,14 @@ async function rejectEmployee(req, res) {
   }
 }
 
-async function revokeAccess(req, res) {
+async function deleteUser(req, res) {
     try {
       const { id } = req.params;
       await User.findByIdAndDelete(id);
-      res.json({ msg: 'User access revoked.' });
+      res.status(200).json({ msg: 'User permanently deleted.' });
     } catch (err) {
-      console.error('Error revoking access:', err);
-      res.status(500).json({ error: 'Failed to revoke access.' });
+      console.error('Error deleting user:', err);
+      res.status(500).json({ error: 'Failed to delete user.' });
     }
 }
 
@@ -103,5 +103,5 @@ module.exports = {
   getActiveUsers,
   approveEmployee,
   rejectEmployee,
-  revokeAccess
+  deleteUser
 };
