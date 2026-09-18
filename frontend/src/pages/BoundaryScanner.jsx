@@ -262,58 +262,6 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
               </div>
             </div>
 
-            <button
-              onClick={downloadGeoJSON}
-              className="w-full bg-[#0B0F17] border border-[#10B981] hover:bg-[#10B981]/20 text-[#10B981] text-xs font-bold py-2.5 px-3 rounded-lg flex items-center justify-center gap-2 transition-all shadow-md"
-            >
-              <Download className="w-4 h-4" /> Export Cadastral GeoJSON
-            </button>
-
-            {/* Z-Axis Depth Calculator */}
-            {!depthMetrics ? (
-              <button
-                onClick={handleCalculateDepth}
-                disabled={isCalculating}
-                className="w-full bg-gradient-to-r from-cyan-600 to-blue-700 hover:from-cyan-500 hover:to-blue-600 disabled:opacity-50 text-white text-xs font-bold py-3 px-3 rounded-lg flex items-center justify-center gap-2 transition-all shadow-[0_0_15px_rgba(6,182,212,0.4)] border border-cyan-400/50 mt-4"
-              >
-                {isCalculating ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>Interfacing with DEM Satellites...</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Map className="w-4 h-4" />
-                    <span>Calculate Z-Axis Depth (Copernicus DEM)</span>
-                  </div>
-                )}
-              </button>
-            ) : (
-              <div className="mt-4 p-4 rounded-xl bg-[#0B0F17]/80 backdrop-blur-md border border-cyan-500/50 shadow-[0_0_20px_rgba(6,182,212,0.2)] relative overflow-hidden group">
-                <div className="absolute top-[-50%] right-[-10%] w-[50%] h-[150%] bg-cyan-500/10 blur-[50px] pointer-events-none group-hover:bg-cyan-500/20 transition-all duration-700"></div>
-                <h4 className="text-cyan-400 font-bold text-xs uppercase tracking-widest mb-3 flex items-center gap-2">
-                  <Activity className="w-4 h-4" /> Volumetric Data Card
-                </h4>
-                <div className="space-y-3 relative z-10">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-400">Average Elevation</span>
-                    <span className="text-white font-mono font-bold bg-slate-800 px-2 py-0.5 rounded">{depthMetrics.averageElevation}m</span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-400">Max Peak</span>
-                    <span className="text-emerald-400 font-mono font-bold bg-emerald-400/10 px-2 py-0.5 rounded">{depthMetrics.maxElevation}m</span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-400">Maximum Depth</span>
-                    <span className="text-cyan-400 font-mono font-bold bg-cyan-400/10 px-2 py-0.5 rounded">{depthMetrics.minElevation}m</span>
-                  </div>
-                </div>
-                <div className="mt-3 pt-2 border-t border-cyan-500/20 text-[10px] text-slate-500 font-mono flex justify-between">
-                  <span>SRC: {depthMetrics.dataSource}</span>
-                  <span className="text-cyan-500 flex items-center gap-1"><CheckCircle className="w-3 h-3"/> Active</span>
-                </div>
-              </div>
-            )}
           </div>
         )}
 
@@ -325,6 +273,56 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
             <UserCheck className="w-4 h-4 text-[#10B981]" />
             Assign to Surveyor
           </button>
+          
+          {/* Z-Axis Depth Calculator - Moved below Assign to Surveyor */}
+          {results && !scanError && (
+            <div className="mt-4">
+              {!depthMetrics ? (
+                <button
+                  onClick={handleCalculateDepth}
+                  disabled={isCalculating}
+                  className="w-full bg-gradient-to-r from-cyan-600 to-blue-700 hover:from-cyan-500 hover:to-blue-600 disabled:opacity-50 text-white text-xs font-bold py-3 px-3 rounded-lg flex items-center justify-center gap-2 transition-all shadow-[0_0_15px_rgba(6,182,212,0.4)] border border-cyan-400/50"
+                >
+                  {isCalculating ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Interfacing with DEM...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Map className="w-4 h-4" />
+                      <span>Calculate Z-Axis Depth (3D)</span>
+                    </div>
+                  )}
+                </button>
+              ) : (
+                <div className="p-4 rounded-xl bg-[#0B0F17]/80 backdrop-blur-md border border-cyan-500/50 shadow-[0_0_20px_rgba(6,182,212,0.2)] relative overflow-hidden group">
+                  <div className="absolute top-[-50%] right-[-10%] w-[50%] h-[150%] bg-cyan-500/10 blur-[50px] pointer-events-none group-hover:bg-cyan-500/20 transition-all duration-700"></div>
+                  <h4 className="text-cyan-400 font-bold text-xs uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <Activity className="w-4 h-4" /> Volumetric Data Card
+                  </h4>
+                  <div className="space-y-3 relative z-10">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-slate-400">Average Elevation</span>
+                      <span className="text-white font-mono font-bold bg-slate-800 px-2 py-0.5 rounded">{depthMetrics.averageElevation}m</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-slate-400">Max Peak</span>
+                      <span className="text-emerald-400 font-mono font-bold bg-emerald-400/10 px-2 py-0.5 rounded">{depthMetrics.maxElevation}m</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-slate-400">Maximum Depth</span>
+                      <span className="text-cyan-400 font-mono font-bold bg-cyan-400/10 px-2 py-0.5 rounded">{depthMetrics.minElevation}m</span>
+                    </div>
+                  </div>
+                  <div className="mt-3 pt-2 border-t border-cyan-500/20 text-[10px] text-slate-500 font-mono flex justify-between">
+                    <span>SRC: {depthMetrics.dataSource}</span>
+                    <span className="text-cyan-500 flex items-center gap-1"><CheckCircle className="w-3 h-3"/> Active</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
