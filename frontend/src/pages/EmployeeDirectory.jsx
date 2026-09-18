@@ -12,6 +12,14 @@ const EmployeeDirectory = () => {
   const [activeUsers, setActiveUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [confirmDialog, setConfirmDialog] = useState({ 
+    isOpen: false, 
+    actionType: null, 
+    targetId: null, 
+    title: '', 
+    message: '', 
+    confirmText: '' 
+  });
 
   const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
@@ -53,34 +61,27 @@ const EmployeeDirectory = () => {
     }
   };
 
-  const handleReject = async (id) => {
-    if (!window.confirm("Are you sure you want to reject this request?")) return;
+  const handleConfirmAction = async () => {
     try {
       const token = localStorage.getItem('depthfence_token');
-      await axios.post(`${API_URL}/api/admin/employees/${id}/reject`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setSelectedEmployee(null);
-      fetchManagementData();
-    } catch (err) {
-      console.error('Rejection failed', err);
-    }
-  };
-
-  const handleDeleteUser = async (userId) => {
-    if (!window.confirm("Are you sure you want to permanently delete this user?")) return;
-    try {
-      const token = localStorage.getItem('depthfence_token');
-      await axios.delete(`${API_URL}/api/admin/users/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      // Update local state instantly without page refresh
-      setActiveUsers(prev => prev.filter(u => u._id !== userId));
-      setPendingEmployees(prev => prev.filter(u => u._id !== userId));
-      // Automatically close modal if deleted user is currently open
-      setSelectedEmployee(prev => (prev && prev._id === userId) ? null : prev);
-    } catch (err) {
-      console.error('Delete failed', err);
+      if (confirmDialog.actionType === 'DELETE') {
+        await axios.delete(`${API_URL}/api/admin/users/${confirmDialog.targetId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setActiveUsers(prev => prev.filter(u => u._id !== confirmDialog.targetId));
+        setPendingEmployees(prev => prev.filter(u => u._id !== confirmDialog.targetId));
+        setSelectedEmployee(prev => (prev && prev._id === confirmDialog.targetId) ? null : prev);
+      } else if (confirmDialog.actionType === 'REJECT') {
+        await axios.post(`${API_URL}/api/admin/employees/${confirmDialog.targetId}/reject`, {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setSelectedEmployee(null);
+        fetchManagementData();
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setConfirmDialog({ isOpen: false, actionType: null, targetId: null, title: '', message: '', confirmText: '' });
     }
   };
 
@@ -187,6 +188,33 @@ const EmployeeDirectory = () => {
   return (
     <div className="flex-1 overflow-y-auto p-8 relative font-sans">
       
+      {/* -------------------- DYNAMIC CONFIRMATION MODAL -------------------- */}
+      {confirmDialog.isOpen && (
+        <div className="fixed inset-0 z-[4000] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-[#0F172A] w-full max-w-md rounded-2xl shadow-2xl p-6 border border-red-500/20 flex flex-col items-center text-center">
+            <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-4">
+              <AlertTriangle className="w-8 h-8 text-red-500" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{confirmDialog.title}</h3>
+            <p className="text-slate-500 dark:text-[#94A3B8] mb-6 text-sm">{confirmDialog.message}</p>
+            <div className="flex w-full gap-3">
+              <button 
+                onClick={() => setConfirmDialog({ isOpen: false, actionType: null, targetId: null, title: '', message: '', confirmText: '' })}
+                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleConfirmAction}
+                className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg shadow-lg shadow-red-500/20 transition-colors"
+              >
+                {confirmDialog.confirmText}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* -------------------- EMPLOYEE PROFILE MODAL -------------------- */}
       {selectedEmployee && (
         <div className="fixed inset-0 z-[3000] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-300">
@@ -210,7 +238,7 @@ const EmployeeDirectory = () => {
             {selectedEmployee.status === 'Pending' && selectedEmployee.registrationType === 'Employee' && (
               <div className="px-6 py-4 bg-slate-50 dark:bg-[#131B2B] border-t border-slate-200 dark:border-slate-800 flex justify-end gap-4">
                 <button 
-                  onClick={() => handleReject(selectedEmployee._id)}
+                  onClick={() => setConfirmDialog({ isOpen: true, actionType: 'REJECT', targetId: selectedEmployee._id, title: 'Reject Clearance', message: 'Are you sure you want to reject this employee security clearance request?', confirmText: 'Reject Request' })}
                   className="flex items-center gap-2 px-6 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-500 font-bold rounded-lg transition-colors"
                 >
                   <XCircle className="w-5 h-5" /> REJECT
@@ -227,7 +255,7 @@ const EmployeeDirectory = () => {
             {selectedEmployee.status === 'Active' && (
               <div className="px-6 py-4 bg-slate-50 dark:bg-[#131B2B] border-t border-slate-200 dark:border-slate-800 flex justify-end gap-4">
                 <button 
-                  onClick={() => handleDeleteUser(selectedEmployee._id)}
+                  onClick={() => setConfirmDialog({ isOpen: true, actionType: 'DELETE', targetId: selectedEmployee._id, title: 'Confirm Deletion', message: 'Are you absolutely sure you want to permanently delete this user? This action cannot be undone.', confirmText: 'Permanently Delete' })}
                   className="flex items-center gap-2 px-6 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-500 font-bold rounded-lg transition-colors"
                 >
                   <Trash2 className="w-5 h-5" /> {selectedEmployee.registrationType === 'Employee' ? 'REVOKE ACCESS' : 'DELETE USER'}
@@ -365,7 +393,7 @@ const EmployeeDirectory = () => {
                             <Eye className="w-4 h-4" /> View Profile
                           </button>
                           <button 
-                            onClick={(e) => { e.stopPropagation(); handleDeleteUser(u._id); }}
+                            onClick={(e) => { e.stopPropagation(); setConfirmDialog({ isOpen: true, actionType: 'DELETE', targetId: u._id, title: 'Confirm Deletion', message: 'Are you absolutely sure you want to permanently delete this user? This action cannot be undone.', confirmText: 'Permanently Delete' }); }}
                             className="px-4 py-2 bg-red-500/10 group-hover:bg-red-500/20 text-red-600 dark:text-red-500 font-bold rounded-lg transition-colors flex items-center gap-2 text-xs"
                           >
                             <Trash2 className="w-4 h-4" /> Delete
