@@ -96,6 +96,91 @@ const EmployeeDirectory = () => {
     );
   }
 
+  const renderEmployeeProfile = (emp) => (
+    <div className="flex-1 overflow-y-auto p-6">
+      <div className="flex flex-col md:flex-row gap-8">
+        
+        {/* Photo & Basic Info Column */}
+        <div className="flex flex-col items-center md:items-start md:w-1/3">
+          <div className="w-40 h-40 rounded-full border-4 border-white dark:border-[#1E293B] shadow-xl overflow-hidden bg-slate-100 dark:bg-slate-800 mb-4">
+            {emp.photoUrl ? (
+              <img src={emp.photoUrl} alt="Employee ID" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-slate-400"><User className="w-12 h-12" /></div>
+            )}
+          </div>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white text-center md:text-left">{emp.fullName}</h2>
+          <p className="text-sm font-mono text-[#0EA5E9] mb-4">{emp.employeeId}</p>
+          
+          <div className="w-full space-y-3">
+            <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-[#94A3B8]">
+              <Briefcase className="w-4 h-4 text-slate-400" />
+              {emp.jobTitle || 'N/A'}
+            </div>
+            <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-[#94A3B8]">
+              <Building className="w-4 h-4 text-slate-400" />
+              {emp.department || 'N/A'}
+            </div>
+          </div>
+        </div>
+
+        {/* Detailed HR Data Column */}
+        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-6">
+          
+          <div className="bg-slate-50 dark:bg-[#131B2B] p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Contact Information</h4>
+            <div className="space-y-3 text-sm text-slate-700 dark:text-slate-300">
+              <div className="flex items-start gap-2"><Mail className="w-4 h-4 text-slate-400 mt-0.5" /> <span className="break-all">{emp.officialEmail}</span></div>
+              <div className="flex items-start gap-2"><Phone className="w-4 h-4 text-slate-400 mt-0.5" /> {emp.phone || 'N/A'}</div>
+              <div className="flex items-start gap-2"><MapPin className="w-4 h-4 text-slate-400 mt-0.5" /> <span>{emp.address || 'N/A'}</span></div>
+            </div>
+          </div>
+
+          <div className="bg-slate-50 dark:bg-[#131B2B] p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Personal Details</h4>
+            <div className="space-y-3 text-sm text-slate-700 dark:text-slate-300">
+              <div className="flex items-start gap-2"><Calendar className="w-4 h-4 text-slate-400 mt-0.5" /> {emp.dob ? new Date(emp.dob).toLocaleDateString() : 'N/A'}</div>
+              <div className="flex items-start gap-2"><Users className="w-4 h-4 text-slate-400 mt-0.5" /> {emp.gender || 'N/A'}</div>
+              <div className="flex items-start gap-2"><Briefcase className="w-4 h-4 text-slate-400 mt-0.5" /> <span>{emp.education || 'N/A'}</span></div>
+            </div>
+          </div>
+
+          <div className="bg-red-500/5 dark:bg-red-500/10 p-4 rounded-xl border border-red-500/20 sm:col-span-2">
+            <h4 className="text-xs font-bold text-red-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+              <Stethoscope className="w-4 h-4" /> Emergency Contact
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-slate-700 dark:text-slate-300">
+              <div><span className="text-slate-400 text-xs block mb-1">Name</span> {emp.emergencyContact?.name || 'N/A'}</div>
+              <div><span className="text-slate-400 text-xs block mb-1">Phone</span> {emp.emergencyContact?.phone || 'N/A'}</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderStandardUserProfile = (u) => (
+    <div className="flex-1 overflow-y-auto p-12 flex flex-col items-center justify-center text-center">
+      <div className="w-32 h-32 rounded-full bg-slate-100 dark:bg-slate-800 border-4 border-slate-200 dark:border-slate-700 flex items-center justify-center mb-6 shadow-xl">
+        <User className="w-16 h-16 text-slate-400" />
+      </div>
+      <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">{u.fullName}</h2>
+      <p className="text-lg text-slate-500 dark:text-[#94A3B8] mb-8 flex items-center gap-2 justify-center">
+        <Mail className="w-5 h-5" /> {u.officialEmail}
+      </p>
+      
+      <div className="flex gap-4 items-center justify-center">
+        <span className="px-5 py-2 bg-[#0EA5E9]/10 text-[#0EA5E9] font-bold uppercase tracking-widest text-sm rounded-full border border-[#0EA5E9]/30">
+          Standard User
+        </span>
+        <span className={`px-5 py-2 font-bold uppercase tracking-widest text-sm rounded-full border ${u.status === 'Active' ? 'bg-green-500/10 text-green-500 border-green-500/30' : 'bg-amber-500/10 text-amber-500 border-amber-500/30'}`}>
+          {u.status}
+        </span>
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex-1 overflow-y-auto p-8 relative font-sans">
       
@@ -107,7 +192,7 @@ const EmployeeDirectory = () => {
             <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-[#131B2B]">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <Users className="w-5 h-5 text-[#0EA5E9]" />
-                Employee Profile 
+                {selectedEmployee.registrationType === 'Employee' ? 'Employee Profile' : 'User Profile'}
                 {selectedEmployee.status === 'Pending' && <span className="text-xs bg-amber-500 text-white px-2 py-0.5 rounded-full ml-2">Pending Approval</span>}
               </h3>
               <button onClick={() => setSelectedEmployee(null)} className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors">
@@ -115,69 +200,11 @@ const EmployeeDirectory = () => {
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="flex flex-col md:flex-row gap-8">
-                
-                {/* Photo & Basic Info Column */}
-                <div className="flex flex-col items-center md:items-start md:w-1/3">
-                  <div className="w-40 h-40 rounded-full border-4 border-white dark:border-[#1E293B] shadow-xl overflow-hidden bg-slate-100 dark:bg-slate-800 mb-4">
-                    {selectedEmployee.photoUrl ? (
-                      <img src={selectedEmployee.photoUrl} alt="Employee ID" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-slate-400"><User className="w-12 h-12" /></div>
-                    )}
-                  </div>
-                  <h2 className="text-xl font-bold text-slate-900 dark:text-white text-center md:text-left">{selectedEmployee.fullName}</h2>
-                  <p className="text-sm font-mono text-[#0EA5E9] mb-4">{selectedEmployee.employeeId}</p>
-                  
-                  <div className="w-full space-y-3">
-                    <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-[#94A3B8]">
-                      <Briefcase className="w-4 h-4 text-slate-400" />
-                      {selectedEmployee.jobTitle || 'N/A'}
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-[#94A3B8]">
-                      <Building className="w-4 h-4 text-slate-400" />
-                      {selectedEmployee.department || 'N/A'}
-                    </div>
-                  </div>
-                </div>
+            {selectedEmployee.registrationType === 'Employee' 
+              ? renderEmployeeProfile(selectedEmployee)
+              : renderStandardUserProfile(selectedEmployee)}
 
-                {/* Detailed HR Data Column */}
-                <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  
-                  <div className="bg-slate-50 dark:bg-[#131B2B] p-4 rounded-xl border border-slate-200 dark:border-slate-800">
-                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Contact Information</h4>
-                    <div className="space-y-3 text-sm text-slate-700 dark:text-slate-300">
-                      <div className="flex items-start gap-2"><Mail className="w-4 h-4 text-slate-400 mt-0.5" /> <span className="break-all">{selectedEmployee.officialEmail}</span></div>
-                      <div className="flex items-start gap-2"><Phone className="w-4 h-4 text-slate-400 mt-0.5" /> {selectedEmployee.phone || 'N/A'}</div>
-                      <div className="flex items-start gap-2"><MapPin className="w-4 h-4 text-slate-400 mt-0.5" /> <span>{selectedEmployee.address || 'N/A'}</span></div>
-                    </div>
-                  </div>
-
-                  <div className="bg-slate-50 dark:bg-[#131B2B] p-4 rounded-xl border border-slate-200 dark:border-slate-800">
-                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Personal Details</h4>
-                    <div className="space-y-3 text-sm text-slate-700 dark:text-slate-300">
-                      <div className="flex items-start gap-2"><Calendar className="w-4 h-4 text-slate-400 mt-0.5" /> {selectedEmployee.dob ? new Date(selectedEmployee.dob).toLocaleDateString() : 'N/A'}</div>
-                      <div className="flex items-start gap-2"><Users className="w-4 h-4 text-slate-400 mt-0.5" /> {selectedEmployee.gender || 'N/A'}</div>
-                      <div className="flex items-start gap-2"><Briefcase className="w-4 h-4 text-slate-400 mt-0.5" /> <span>{selectedEmployee.education || 'N/A'}</span></div>
-                    </div>
-                  </div>
-
-                  <div className="bg-red-500/5 dark:bg-red-500/10 p-4 rounded-xl border border-red-500/20 sm:col-span-2">
-                    <h4 className="text-xs font-bold text-red-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                      <Stethoscope className="w-4 h-4" /> Emergency Contact
-                    </h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-slate-700 dark:text-slate-300">
-                      <div><span className="text-slate-400 text-xs block mb-1">Name</span> {selectedEmployee.emergencyContact?.name || 'N/A'}</div>
-                      <div><span className="text-slate-400 text-xs block mb-1">Phone</span> {selectedEmployee.emergencyContact?.phone || 'N/A'}</div>
-                    </div>
-                  </div>
-
-                </div>
-              </div>
-            </div>
-
-            {selectedEmployee.status === 'Pending' && (
+            {selectedEmployee.status === 'Pending' && selectedEmployee.registrationType === 'Employee' && (
               <div className="px-6 py-4 bg-slate-50 dark:bg-[#131B2B] border-t border-slate-200 dark:border-slate-800 flex justify-end gap-4">
                 <button 
                   onClick={() => handleReject(selectedEmployee._id)}
@@ -194,15 +221,13 @@ const EmployeeDirectory = () => {
               </div>
             )}
             
-            {selectedEmployee.status === 'Active' && selectedEmployee.registrationType !== 'User' && (
+            {selectedEmployee.status === 'Active' && (
               <div className="px-6 py-4 bg-slate-50 dark:bg-[#131B2B] border-t border-slate-200 dark:border-slate-800 flex justify-end gap-4">
                 <button 
-                  onClick={() => {
-                    handleRevoke(selectedEmployee._id);
-                  }}
+                  onClick={() => handleRevoke(selectedEmployee._id)}
                   className="flex items-center gap-2 px-6 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-500 font-bold rounded-lg transition-colors"
                 >
-                  <Trash2 className="w-5 h-5" /> REVOKE ACCESS
+                  <Trash2 className="w-5 h-5" /> {selectedEmployee.registrationType === 'Employee' ? 'REVOKE ACCESS' : 'DELETE USER'}
                 </button>
               </div>
             )}
