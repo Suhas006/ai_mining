@@ -17,6 +17,7 @@ import Register from './pages/Register';
 import Settings from './pages/Settings';
 import Profile from './pages/Profile';
 import AdminPanel from './pages/AdminPanel';
+import EmployeeDirectory from './pages/EmployeeDirectory';
 
 import ThreeDPitViewer from './components/ThreeDPitViewer';
 import ParcelRegisterModal from './components/ParcelRegisterModal';
@@ -94,6 +95,7 @@ export default function App() {
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/admin-panel" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
+              <Route path="/admin/employees" element={<ProtectedRoute><EmployeeDirectory /></ProtectedRoute>} />
               
               <Route
                 path="/2d-scanner"

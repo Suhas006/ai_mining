@@ -66,13 +66,19 @@ const Sidebar = () => {
                 <ShieldAlert className="w-5 h-5" />
                 Admin Access
               </NavLink>
-              <a
-                href="/admin-panel#employee-approvals"
-                className="flex items-center gap-2 px-3 py-2 mt-1 rounded-lg transition-all text-xs font-semibold text-[#F59E0B]/80 hover:bg-[#F59E0B]/5 hover:text-[#F59E0B] dark:hover:text-white border border-transparent ml-2"
+              <NavLink
+                to="/admin/employees"
+                className={({ isActive }) =>
+                  `flex items-center gap-2 px-3 py-2 mt-1 rounded-lg transition-all text-xs font-semibold ml-2 ${
+                    isActive
+                      ? 'bg-[#F59E0B]/10 text-slate-900 dark:text-white border border-[#F59E0B]/30'
+                      : 'text-[#F59E0B]/80 hover:bg-[#F59E0B]/5 hover:text-[#F59E0B] dark:hover:text-white border border-transparent'
+                  }`
+                }
               >
                 <div className="w-1.5 h-1.5 rounded-full bg-[#F59E0B]"></div>
                 Employee Approvals
-              </a>
+              </NavLink>
             </div>
           )}
 
