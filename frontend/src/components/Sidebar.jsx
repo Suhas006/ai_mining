@@ -96,6 +96,23 @@ const Sidebar = () => {
             Dashboard Home
           </NavLink>
 
+          <div className="text-[10px] font-bold text-cyan-500 uppercase tracking-wider mt-4 mb-2 px-2">
+            Geospatial Tools
+          </div>
+          <NavLink
+            to="/z-axis-analyzer"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm font-medium ${
+                isActive
+                  ? 'bg-cyan-500/10 text-slate-900 dark:text-white border border-cyan-500/30 shadow-[inset_0_0_10px_rgba(6,182,212,0.1)]'
+                  : 'hover:bg-slate-200 dark:hover:bg-[#1E293B] hover:text-slate-900 dark:hover:text-white border border-transparent'
+              }`
+            }
+          >
+            <Map className="w-5 h-5 text-cyan-500" />
+            3D Z-Axis Analyzer
+          </NavLink>
+
           <NavLink
             to="/settings"
             className={({ isActive }) =>

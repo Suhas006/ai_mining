@@ -10,6 +10,7 @@ import Sidebar from './components/Sidebar';
 import BoundaryScanner from './pages/BoundaryScanner';
 import DepthMapping from './pages/DepthMapping';
 import Scanner2D from './pages/Scanner2D';
+import ZAxisAnalyzer from './pages/ZAxisAnalyzer';
 
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
@@ -132,6 +133,14 @@ export default function App() {
                         setSessionScannedBoundaries(prev => [...prev, newBoundary]);
                       }}
                     />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/z-axis-analyzer"
+                element={
+                  <ProtectedRoute>
+                    <ZAxisAnalyzer />
                   </ProtectedRoute>
                 }
               />
