@@ -15,7 +15,7 @@ import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Settings from './pages/Settings';
-import Profile from './pages/Profile';
+import MyProfile from './pages/MyProfile';
 import AdminPanel from './pages/AdminPanel';
 import EmployeeDirectory from './pages/EmployeeDirectory';
 
@@ -93,7 +93,7 @@ export default function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><MyProfile /></ProtectedRoute>} />
               <Route path="/admin-panel" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
               <Route path="/admin/employees" element={<ProtectedRoute><EmployeeDirectory /></ProtectedRoute>} />
               

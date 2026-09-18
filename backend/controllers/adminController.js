@@ -98,10 +98,45 @@ async function deleteUser(req, res) {
     }
 }
 
+async function approveProfileRequest(req, res) {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ error: 'User not found.' });
+
+    if (user.pendingProfileUpdates) {
+      Object.assign(user, user.pendingProfileUpdates);
+      user.pendingProfileUpdates = null;
+      await user.save();
+    }
+    res.json({ msg: 'Profile update approved.', user });
+  } catch (err) {
+    console.error('Error approving profile request:', err);
+    res.status(500).json({ error: 'Failed to approve profile request.' });
+  }
+}
+
+async function rejectProfileRequest(req, res) {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ error: 'User not found.' });
+
+    user.pendingProfileUpdates = null;
+    await user.save();
+    res.json({ msg: 'Profile update rejected.', user });
+  } catch (err) {
+    console.error('Error rejecting profile request:', err);
+    res.status(500).json({ error: 'Failed to reject profile request.' });
+  }
+}
+
 module.exports = {
   getPendingEmployees,
   getActiveUsers,
   approveEmployee,
   rejectEmployee,
-  deleteUser
+  deleteUser,
+  approveProfileRequest,
+  rejectProfileRequest
 };

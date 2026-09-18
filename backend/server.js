@@ -13,7 +13,7 @@ const { registerParcel, getParcels, searchParcels } = require('./controllers/par
 const { analyzeRaster, getAnomalies, updateAnomalyStatus, assignAnomalyOfficer } = require('./controllers/surveillanceController');
 const { submitInspection, getPendingInspections } = require('./controllers/inspectionController');
 const { generateLegalNotice } = require('./controllers/reportController');
-const { getPendingEmployees, getActiveUsers, approveEmployee, rejectEmployee, deleteUser } = require('./controllers/adminController');
+const { getPendingEmployees, getActiveUsers, approveEmployee, rejectEmployee, deleteUser, approveProfileRequest, rejectProfileRequest } = require('./controllers/adminController');
 const { authMiddleware } = require('./middleware/authMiddleware');
 
 // Models
@@ -61,6 +61,9 @@ app.post('/api/auth/register', upload.single('photo'), register);
 app.post('/api/auth/login', login);
 app.get('/api/auth/me', authMiddleware, getMe);
 
+const userRoutes = require('./routes/user');
+app.use('/api/users', userRoutes);
+
 // Admin Routes
 const adminMiddleware = (req, res, next) => {
   if (req.user && req.user.role === 'admin') {
@@ -74,6 +77,8 @@ app.get('/api/admin/employees/active', authMiddleware, adminMiddleware, getActiv
 app.post('/api/admin/employees/:id/approve', authMiddleware, adminMiddleware, approveEmployee);
 app.post('/api/admin/employees/:id/reject', authMiddleware, adminMiddleware, rejectEmployee);
 app.delete('/api/admin/users/:id', authMiddleware, adminMiddleware, deleteUser);
+app.put('/api/admin/profile-requests/:id/approve', authMiddleware, adminMiddleware, approveProfileRequest);
+app.put('/api/admin/profile-requests/:id/reject', authMiddleware, adminMiddleware, rejectProfileRequest);
 
 app.post('/api/parcels/register', registerParcel);
 app.get('/api/parcels', getParcels);

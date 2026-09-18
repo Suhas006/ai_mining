@@ -57,6 +57,7 @@ const UserSchema = new mongoose.Schema({
     phone: { type: String }
   },
   jobTitle: { type: String },
+  pendingProfileUpdates: { type: Object, default: null },
 
   lastLoginIp: { type: String, default: '192.168.1.104' },
   lastLoginAt: { type: Date, default: Date.now },
