@@ -13,18 +13,8 @@ const createTransporter = async () => {
       },
     });
   } else {
-    // Mock / Ethereal account for testing if real credentials are not provided
-    console.warn("⚠️ Using Mock/Ethereal email for nodemailer because EMAIL_USER is not set.");
-    let testAccount = await nodemailer.createTestAccount();
-    return nodemailer.createTransport({
-      host: "smtp.ethereal.email",
-      port: 587,
-      secure: false,
-      auth: {
-        user: testAccount.user,
-        pass: testAccount.pass,
-      },
-    });
+    console.warn("⚠️ EMAIL_USER not set. Bypassing email notification to avoid Ethereal hangs.");
+    return null;
   }
 };
 
@@ -63,17 +53,16 @@ async function approveEmployee(req, res) {
     // Send email notification
     try {
       let transporter = await createTransporter();
-      let info = await transporter.sendMail({
-        from: '"DepthFence Grid Administrator" <admin@depthfence.in>',
-        to: user.officialEmail,
-        subject: "Security Clearance Approved - DepthFence Enterprise Grid",
-        text: `Hello ${user.fullName},\n\nYour DepthFence Employee account has been approved by the Administrator. You may now log in to the enterprise grid using your registered credentials.\n\nThank you,\nSystem Administrator`,
-        html: `<p>Hello <strong>${user.fullName}</strong>,</p><p>Your DepthFence Employee account has been approved by the Administrator. You may now log in to the enterprise grid using your registered credentials.</p><p>Thank you,<br/>System Administrator</p>`,
-      });
+      if (transporter) {
+        let info = await transporter.sendMail({
+          from: '"DepthFence Grid Administrator" <admin@depthfence.in>',
+          to: user.officialEmail,
+          subject: "Security Clearance Approved - DepthFence Enterprise Grid",
+          text: `Hello ${user.fullName},\n\nYour DepthFence Employee account has been approved by the Administrator. You may now log in to the enterprise grid using your registered credentials.\n\nThank you,\nSystem Administrator`,
+          html: `<p>Hello <strong>${user.fullName}</strong>,</p><p>Your DepthFence Employee account has been approved by the Administrator. You may now log in to the enterprise grid using your registered credentials.</p><p>Thank you,<br/>System Administrator</p>`,
+        });
 
-      console.log("Email sent: %s", info.messageId);
-      if (nodemailer.getTestMessageUrl(info)) {
-        console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+        console.log("Email sent: %s", info.messageId);
       }
     } catch (emailErr) {
       console.error('Failed to send approval email:', emailErr);

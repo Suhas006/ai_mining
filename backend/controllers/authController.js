@@ -64,7 +64,7 @@ async function register(req, res) {
       type: 'info'
     });
 
-    if (isEmployee) {
+    if (role === 'employee') {
       // Do not return token for pending employees
       return res.status(201).json({
         msg: 'Request sent to Administrator for approval.',
