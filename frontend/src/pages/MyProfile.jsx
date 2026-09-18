@@ -34,8 +34,16 @@ const MyProfile = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      if (!user || (!user._id && !user.id)) {
+        console.error("Critical Error: User ID is missing from state.");
+        setMessage({ type: 'error', text: 'Critical Error: User ID is missing from state.' });
+        return;
+      }
+      
+      const targetId = user._id || user.id;
+
       const token = localStorage.getItem('depthfence_token');
-      const response = await axios.put(`${API_URL}/api/users/profile/${user._id}`, formData, {
+      const response = await axios.put(`${API_URL}/api/users/profile/${targetId}`, formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
