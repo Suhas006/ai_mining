@@ -70,8 +70,9 @@ async function register(req, res) {
       }
     }
 
-    if (role === 'user') {
-      const uniqueFallback = 'STD_' + Date.now().toString();
+    const incomingRole = (role || '').toLowerCase();
+    if (incomingRole === 'user' || incomingRole === 'standard user' || incomingRole === 'standard') {
+      const uniqueFallback = 'STD_' + Date.now().toString() + Math.floor(Math.random() * 1000);
       req.body.employeeId = uniqueFallback;
       employeeData.phone = uniqueFallback; // Bypass potential legacy unique index on phone
     }
@@ -79,7 +80,7 @@ async function register(req, res) {
     const user = await User.create({
       fullName: userName,
       officialEmail: userEmail,
-      employeeId: role === 'user' ? req.body.employeeId : (employeeId || `TN-MIN-${Math.floor(1000 + Math.random() * 9000)}`),
+      employeeId: (incomingRole === 'user' || incomingRole === 'standard user' || incomingRole === 'standard') ? req.body.employeeId : (employeeId || `TN-MIN-${Math.floor(1000 + Math.random() * 9000)}`),
       passwordHash,
       department: department || 'Geology & Mining',
       role: role || 'user',
@@ -138,11 +139,15 @@ async function register(req, res) {
       }
     });
   } catch (err) {
-    console.error('Registration error:', err);
+    console.error("FULL REGISTRATION ERROR:", err);
+    
+    // Explicitly catch the MongoDB duplicate key error (11000) and send the exact field causing it
     if (err.code === 11000) {
-      return res.status(400).json({ error: 'A duplicate entry exists for a unique field (e.g. Employee ID or Phone). Please verify your details.' });
+        return res.status(400).json({ error: `Duplicate Database Field: ${JSON.stringify(err.keyValue)}` });
     }
-    res.status(500).json({ error: 'Internal server error during registration.' });
+    
+    // Send the actual Mongoose validation message instead of a generic 500
+    return res.status(500).json({ error: err.message || "Internal server error" });
   }
 }
 
