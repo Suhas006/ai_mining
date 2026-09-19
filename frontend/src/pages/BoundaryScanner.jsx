@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import axios from 'axios';
 import MapView from '../components/MapView';
 import { UploadCloud, CheckCircle, Search, UserCheck, Camera, X, Download, AlertTriangle } from 'lucide-react';
 import { useLiveData } from '../context/LiveDataContext';
@@ -114,7 +115,7 @@ const BoundaryScanner = ({ parcels, leases, anomalies, sessionScannedBoundaries,
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    
+
     // Log event
     addAuditLog('Cadastral GeoJSON Exported', user?.email || 'Unknown User');
   };
