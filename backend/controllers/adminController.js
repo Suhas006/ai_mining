@@ -21,8 +21,11 @@ const createTransporter = async () => {
 async function getPendingEmployees(req, res) {
   try {
     const pendingUsers = await User.find({ 
-      status: { $in: ['Pending', 'pending', 'reactivation_pending'] }, 
-      isDeleted: false 
+      $or: [
+        { status: 'Pending' }, 
+        { status: 'pending' }, 
+        { isReactivationRequested: true }
+      ]
     }).select('-passwordHash');
     res.json(pendingUsers);
   } catch (err) {

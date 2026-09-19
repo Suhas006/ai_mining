@@ -259,20 +259,27 @@ const EmployeeDirectory = () => {
               ? renderEmployeeProfile(selectedEmployee)
               : renderStandardUserProfile(selectedEmployee)}
 
-            {selectedEmployee.status === 'Pending' && selectedEmployee.registrationType === 'Employee' && (
-              <div className="px-6 py-4 bg-slate-50 dark:bg-[#131B2B] border-t border-slate-200 dark:border-slate-800 flex justify-end gap-4">
-                <button 
-                  onClick={() => setConfirmDialog({ isOpen: true, actionType: 'REJECT', targetId: selectedEmployee._id, title: 'Reject Clearance', message: 'Are you sure you want to reject this employee security clearance request?', confirmText: 'Reject Request' })}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-500 font-bold rounded-lg transition-colors"
-                >
-                  <XCircle className="w-5 h-5" /> REJECT
-                </button>
-                <button 
-                  onClick={() => handleApprove(selectedEmployee._id)}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-[#10B981] hover:bg-[#059669] text-white font-bold rounded-lg shadow-lg shadow-green-500/20 transition-colors"
-                >
-                  <CheckCircle className="w-5 h-5" /> APPROVE ACCESS
-                </button>
+            {(selectedEmployee.status === 'Pending' || selectedEmployee.status === 'reactivation_pending' || selectedEmployee.isReactivationRequested) && (
+              <div className="px-6 py-4 bg-slate-50 dark:bg-[#131B2B] border-t border-slate-200 dark:border-slate-800 flex flex-col gap-3">
+                {selectedEmployee.isReactivationRequested && (
+                  <div className="bg-red-900/50 border border-red-500 text-red-200 text-xs p-2 rounded mb-2">
+                    ⚠️ You removed this user previously. Would you like to add them back?
+                  </div>
+                )}
+                <div className="flex justify-end gap-4">
+                  <button 
+                    onClick={() => setConfirmDialog({ isOpen: true, actionType: 'REJECT', targetId: selectedEmployee._id, title: 'Reject Clearance', message: 'Are you sure you want to reject this request?', confirmText: 'Reject Request' })}
+                    className="flex items-center gap-2 px-6 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-500 font-bold rounded-lg transition-colors"
+                  >
+                    <XCircle className="w-5 h-5" /> REJECT
+                  </button>
+                  <button 
+                    onClick={() => handleApprove(selectedEmployee._id)}
+                    className="flex items-center gap-2 px-6 py-2.5 bg-[#10B981] hover:bg-[#059669] text-white font-bold rounded-lg shadow-lg shadow-green-500/20 transition-colors"
+                  >
+                    <CheckCircle className="w-5 h-5" /> APPROVE ACCESS
+                  </button>
+                </div>
               </div>
             )}
             

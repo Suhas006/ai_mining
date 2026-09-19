@@ -32,9 +32,8 @@ async function register(req, res) {
         existingUser.fullName = userName;
         existingUser.status = 'reactivation_pending';
         existingUser.isReactivationRequested = true;
-        // Optionally update other fields here...
         await existingUser.save();
-        return res.status(200).json({ msg: "Re-admission request submitted to Admin for clearance.", status: 'Pending' });
+        return res.status(200).json({ message: "Re-admission request sent to the Administrator." });
       }
     }
 
