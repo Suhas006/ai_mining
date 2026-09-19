@@ -86,32 +86,59 @@ const DepthMapping = () => {
   const tileProviders = {
     satellite: {
       url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-      attribution: '&copy; Esri'
+      attribution: "Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
     },
     hybrid: {
       url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
       labelsUrl: "https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}",
-      attribution: '&copy; Esri'
+      attribution: "Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
     }
   };
 
   const handleSearch = async (query) => {
     if (!query || query.trim().length < 2) return;
+    
+    // Check for coordinates bypass
+    const coordRegex = /^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?)[,\s]+[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/;
+    if (coordRegex.test(query.trim())) {
+      const parts = query.trim().split(/[,\s]+/);
+      if (parts.length >= 2) {
+        const lat = parseFloat(parts[0]);
+        const lng = parseFloat(parts[1]);
+        setFlyTarget([lat, lng]);
+        setFlyZoom(18);
+        setSearchPin({ lat, lng, name: `Coordinates: ${lat}, ${lng}` });
+        setSearchResults([]);
+        return;
+      }
+    }
+
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`);
+      const res = await fetch(`https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?singleLine=${encodeURIComponent(query)}&f=json&maxLocations=5`);
       const data = await res.json();
-      setSearchResults(data || []);
-    } catch (err) { }
+      if (data && data.candidates && data.candidates.length > 0) {
+        setSearchResults(data.candidates);
+      } else {
+        setSearchResults([]);
+      }
+    } catch (err) { 
+      setSearchResults([]);
+    }
   };
 
   const handleSelectLocation = (result) => {
-    const lat = parseFloat(result.lat);
-    const lng = parseFloat(result.lon);
+    if (!result || !result.location) {
+      alert("Location coordinates not found.");
+      return;
+    }
+    const { y: lat, x: lng } = result.location;
+    const address = result.address || "Unknown Location";
+    
     setFlyTarget([lat, lng]);
-    setFlyZoom(19);
-    setSearchPin({ lat, lng, name: result.display_name });
+    setFlyZoom(18);
+    setSearchPin({ lat, lng, name: address });
     setSearchResults([]);
-    setSearchQuery(result.display_name.split(',')[0]);
+    setSearchQuery(address.split(',')[0] || address);
   };
 
   const handleLocateMe = () => {
@@ -376,7 +403,7 @@ const DepthMapping = () => {
 
               <div className="pointer-events-auto relative flex flex-col items-start justify-start">
                 <div
-                  className={`relative flex bg-[#131B2B]/95 backdrop-blur-md border border-[#1E293B] rounded-full shadow-2xl items-center transition-all duration-300 ease-in-out overflow-hidden ${isSearchExpanded ? 'w-64 p-2 h-12' : 'w-12 h-12 p-0 flex items-center justify-center cursor-pointer'}`}
+                  className={`relative flex bg-[#0B1120]/80 backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] rounded-full items-center transition-all duration-300 ease-in-out overflow-hidden ${isSearchExpanded ? 'w-64 p-2 h-12' : 'w-12 h-12 p-0 flex items-center justify-center cursor-pointer'}`}
                   onClick={() => { if (!isSearchExpanded) setIsSearchExpanded(true); }}
                 >
                   <div
@@ -414,8 +441,8 @@ const DepthMapping = () => {
                       <div key={idx} onClick={() => handleSelectLocation(item)} className="p-2.5 hover:bg-[#0EA5E9]/20 border-b border-[#1E293B] last:border-0 cursor-pointer flex items-center gap-2 transition-all text-xs">
                         <MapPin size={16} className="text-[#0EA5E9] shrink-0" />
                         <div className="overflow-hidden">
-                          <span className="font-bold text-white block truncate">{item.display_name.split(',')[0]}</span>
-                          <span className="text-[10px] text-[#94A3B8] block truncate">{item.display_name}</span>
+                          <span className="font-bold text-white block truncate">{item.address ? item.address.split(',')[0] : 'Unknown'}</span>
+                          <span className="text-[10px] text-[#94A3B8] block truncate">{item.address}</span>
                         </div>
                       </div>
                     ))}
