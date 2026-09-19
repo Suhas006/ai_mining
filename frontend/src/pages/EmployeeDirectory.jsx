@@ -368,6 +368,22 @@ const EmployeeDirectory = () => {
                             >
                               <Eye className="w-4 h-4" /> View Profile
                             </button>
+                            {(emp.status === 'pending' || emp.status === 'Pending' || emp.status === 'reactivation_pending' || emp.isReactivationRequested) && (
+                              <div className="flex gap-2">
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); handleApprove(emp._id); }}
+                                  className="px-3 py-1.5 bg-[#10B981]/10 hover:bg-[#10B981]/20 text-[#10B981] font-bold rounded flex items-center gap-1 text-xs transition-colors"
+                                >
+                                  <CheckCircle className="w-3.5 h-3.5" /> Approve
+                                </button>
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); setConfirmDialog({ isOpen: true, actionType: 'REJECT', targetId: emp._id, title: 'Reject Clearance', message: 'Are you sure you want to reject this request?', confirmText: 'Reject Request' }); }}
+                                  className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-600 font-bold rounded flex items-center gap-1 text-xs transition-colors"
+                                >
+                                  <XCircle className="w-3.5 h-3.5" /> Reject
+                                </button>
+                              </div>
+                            )}
                           </td>
                         </tr>
                         {emp.isReactivationRequested && (

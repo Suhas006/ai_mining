@@ -102,7 +102,7 @@ const Register = () => {
     } else {
       if (res.status === 409) {
         setShowReactivationPrompt(true);
-        setError("This account was previously removed.");
+        setError(''); // Clear any general error messages
         return;
       }
       setError(res.error || 'Registration failed.');
