@@ -70,10 +70,16 @@ async function register(req, res) {
       }
     }
 
+    if (role === 'user') {
+      const uniqueFallback = 'STD_' + Date.now().toString();
+      req.body.employeeId = uniqueFallback;
+      employeeData.phone = uniqueFallback; // Bypass potential legacy unique index on phone
+    }
+
     const user = await User.create({
       fullName: userName,
       officialEmail: userEmail,
-      employeeId: employeeId || `TN-MIN-${Math.floor(1000 + Math.random() * 9000)}`,
+      employeeId: role === 'user' ? req.body.employeeId : (employeeId || `TN-MIN-${Math.floor(1000 + Math.random() * 9000)}`),
       passwordHash,
       department: department || 'Geology & Mining',
       role: role || 'user',

@@ -337,36 +337,42 @@ const EmployeeDirectory = () => {
                     </tr>
                   ) : (
                     pendingEmployees.map((emp) => (
-                      <tr key={emp._id} onClick={() => setSelectedEmployee(emp)} className="hover:bg-slate-50 dark:hover:bg-[#1E293B]/50 transition-colors cursor-pointer group">
-                        <td className="px-6 py-4">
-                          <div className="flex flex-col gap-1">
-                            <div className="font-semibold flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden flex-shrink-0">
-                                {emp.photoUrl ? (
-                                  <img src={emp.photoUrl} alt="ID" className="w-full h-full object-cover" />
-                                ) : (
-                                  <User className="w-5 h-5 m-1.5 text-slate-400" />
-                                )}
+                      <React.Fragment key={emp._id}>
+                        <tr onClick={() => setSelectedEmployee(emp)} className={`hover:bg-slate-50 dark:hover:bg-[#1E293B]/50 transition-colors cursor-pointer group ${emp.isReactivationRequested ? 'border-l-4 border-l-red-500 bg-red-500/5 dark:bg-red-900/10' : ''}`}>
+                          <td className="px-6 py-4">
+                            <div className="flex flex-col gap-1">
+                              <div className="font-semibold flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden flex-shrink-0">
+                                  {emp.photoUrl ? (
+                                    <img src={emp.photoUrl} alt="ID" className="w-full h-full object-cover" />
+                                  ) : (
+                                    <User className="w-5 h-5 m-1.5 text-slate-400" />
+                                  )}
+                                </div>
+                                {emp.fullName}
                               </div>
-                              {emp.fullName}
                             </div>
-                            {emp.isReactivationRequested && (
-                              <span className="inline-block mt-1 text-[10px] uppercase font-bold tracking-wider text-red-500 bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20 w-fit">
-                                Re-admission Request - Previously Removed
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-slate-500 dark:text-[#94A3B8]">{emp.officialEmail}</td>
-                        <td className="px-6 py-4 text-xs font-semibold text-slate-600 dark:text-slate-300">{emp.jobTitle || 'N/A'}</td>
-                        <td className="px-6 py-4 flex items-center justify-end gap-2">
-                          <button 
-                            className="px-4 py-2 bg-[#0EA5E9]/10 group-hover:bg-[#0EA5E9]/20 text-[#0EA5E9] font-bold rounded-lg transition-colors flex items-center gap-2 text-xs"
-                          >
-                            <Eye className="w-4 h-4" /> View Profile
-                          </button>
-                        </td>
-                      </tr>
+                          </td>
+                          <td className="px-6 py-4 text-slate-500 dark:text-[#94A3B8]">{emp.officialEmail}</td>
+                          <td className="px-6 py-4 text-xs font-semibold text-slate-600 dark:text-slate-300">{emp.jobTitle || 'N/A'}</td>
+                          <td className="px-6 py-4 flex items-center justify-end gap-2">
+                            <button 
+                              className="px-4 py-2 bg-[#0EA5E9]/10 group-hover:bg-[#0EA5E9]/20 text-[#0EA5E9] font-bold rounded-lg transition-colors flex items-center gap-2 text-xs"
+                            >
+                              <Eye className="w-4 h-4" /> View Profile
+                            </button>
+                          </td>
+                        </tr>
+                        {emp.isReactivationRequested && (
+                          <tr className="bg-red-500/5 dark:bg-red-900/10 border-l-4 border-l-red-500 border-b border-b-slate-100 dark:border-b-[#1E293B]">
+                            <td colSpan="4" className="px-6 pb-4 pt-1">
+                              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-red-600 dark:text-red-400 text-sm font-bold flex items-center gap-2 shadow-sm">
+                                ⚠️ You removed this user. Would you like to add them back?
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
                     ))
                   )}
                 </tbody>
