@@ -20,7 +20,10 @@ const createTransporter = async () => {
 
 async function getPendingEmployees(req, res) {
   try {
-    const pendingUsers = await User.find({ status: 'Pending' }).select('-passwordHash');
+    const pendingUsers = await User.find({ 
+      status: { $in: ['Pending', 'pending', 'reactivation_pending'] }, 
+      isDeleted: false 
+    }).select('-passwordHash');
     res.json(pendingUsers);
   } catch (err) {
     console.error('Error fetching pending employees:', err);
@@ -30,7 +33,10 @@ async function getPendingEmployees(req, res) {
 
 async function getActiveUsers(req, res) {
   try {
-    const activeUsers = await User.find({ status: 'Active' }).select('-passwordHash');
+    const activeUsers = await User.find({ 
+      status: { $in: ['Active', 'active'] }, 
+      isDeleted: false 
+    }).select('-passwordHash');
     res.json(activeUsers);
   } catch (err) {
     console.error('Error fetching active users:', err);
@@ -47,6 +53,8 @@ async function approveEmployee(req, res) {
       return res.status(404).json({ error: 'User not found.' });
     }
 
+    user.isDeleted = false;
+    user.isReactivationRequested = false;
     user.status = 'Active';
     await user.save();
 
@@ -79,7 +87,14 @@ async function approveEmployee(req, res) {
 async function rejectEmployee(req, res) {
   try {
     const { id } = req.params;
-    await User.findByIdAndDelete(id);
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ error: 'User not found.' });
+
+    user.isDeleted = true;
+    user.status = 'rejected';
+    user.deletedAt = new Date();
+    await user.save();
+    
     res.json({ msg: 'Employee rejected and removed.' });
   } catch (err) {
     console.error('Error rejecting employee:', err);
@@ -90,7 +105,14 @@ async function rejectEmployee(req, res) {
 async function deleteUser(req, res) {
     try {
       const { id } = req.params;
-      await User.findByIdAndDelete(id);
+      const user = await User.findById(id);
+      if (!user) return res.status(404).json({ error: 'User not found.' });
+      
+      user.isDeleted = true;
+      user.status = 'removed';
+      user.deletedAt = new Date();
+      await user.save();
+      
       res.status(200).json({ msg: 'User permanently deleted.' });
     } catch (err) {
       console.error('Error deleting user:', err);

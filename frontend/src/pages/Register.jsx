@@ -30,6 +30,7 @@ const Register = () => {
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showReactivationPrompt, setShowReactivationPrompt] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
 
@@ -55,8 +56,8 @@ const Register = () => {
     setCurrentStep(1);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (e, isReactivation = false) => {
+    if (e) e.preventDefault();
     setError('');
     setSuccessMsg('');
     setIsSubmitting(true);
@@ -65,6 +66,10 @@ const Register = () => {
     submitData.append('name', formData.fullName);
     submitData.append('email', formData.email);
     submitData.append('password', formData.password);
+
+    if (isReactivation) {
+      submitData.append('requestReactivation', 'true');
+    }
 
     if (formData.registrationType === 'User') {
       submitData.append('role', 'user');
@@ -94,7 +99,11 @@ const Register = () => {
         navigate('/');
       }
     } else {
-      setError(res.error || 'Registration failed.');
+      if (res.code === 'PREVIOUSLY_REMOVED' && !isReactivation) {
+        setShowReactivationPrompt(true);
+      } else {
+        setError(res.error || 'Registration failed.');
+      }
     }
   };
 
@@ -125,6 +134,34 @@ const Register = () => {
     <div className="min-h-screen flex-1 bg-slate-50 dark:bg-[#0B0F17] flex items-center justify-center p-4">
       <div className="absolute top-[-20%] right-[-10%] w-[50%] h-[50%] bg-[#0EA5E9]/10 blur-[120px] rounded-full pointer-events-none"></div>
       
+      {showReactivationPrompt && (
+        <div className="fixed inset-0 z-[5000] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-[#0F172A] w-full max-w-md rounded-2xl shadow-2xl p-6 border border-[#0EA5E9]/20 flex flex-col items-center text-center">
+            <div className="w-16 h-16 bg-[#0EA5E9]/10 rounded-full flex items-center justify-center mb-4">
+              <ShieldCheck className="w-8 h-8 text-[#0EA5E9]" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Re-Admission Needed</h3>
+            <p className="text-slate-500 dark:text-[#94A3B8] mb-6 text-sm">
+              This account was previously removed from DepthFence. Do you want to submit a re-admission request to the Administrator?
+            </p>
+            <div className="flex w-full gap-3">
+              <button 
+                onClick={() => setShowReactivationPrompt(false)}
+                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => { setShowReactivationPrompt(false); handleSubmit(null, true); }}
+                className="flex-1 py-2.5 bg-gradient-to-r from-[#0EA5E9] to-[#2563EB] hover:from-[#0284C7] hover:to-[#1D4ED8] text-white font-bold rounded-lg shadow-lg transition-colors"
+              >
+                Request Re-Admission
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className={`w-full relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-700 mt-12 mb-12 ${formData.registrationType === 'Employee' ? 'max-w-3xl' : 'max-w-md'}`}>
         <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 dark:backdrop-blur-xl rounded-2xl p-8 shadow-2xl">
           

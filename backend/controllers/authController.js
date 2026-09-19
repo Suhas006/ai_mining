@@ -19,9 +19,23 @@ async function register(req, res) {
       return res.status(400).json({ error: 'Official email and clearance password are required.' });
     }
 
-    const existing = await User.findOne({ officialEmail: userEmail });
-    if (existing) {
-      return res.status(400).json({ error: 'Official credentials already registered in the grid.' });
+    const existingUser = await User.findOne({ officialEmail: userEmail });
+    if (existingUser) {
+      if (!existingUser.isDeleted) {
+        return res.status(400).json({ error: 'Official credentials already registered in the grid.' });
+      } else if (!req.body.requestReactivation) {
+        return res.status(409).json({ code: "PREVIOUSLY_REMOVED", error: "This email was previously removed from the enterprise grid. Would you like to request re-admission from the Administrator?" });
+      } else {
+        const passwordHash = await bcrypt.hash(password, 10);
+        existingUser.passwordHash = passwordHash;
+        existingUser.role = role || 'user';
+        existingUser.fullName = userName;
+        existingUser.status = 'reactivation_pending';
+        existingUser.isReactivationRequested = true;
+        // Optionally update other fields here...
+        await existingUser.save();
+        return res.status(200).json({ msg: "Re-admission request submitted to Admin for clearance.", status: 'Pending' });
+      }
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
@@ -119,6 +133,9 @@ async function register(req, res) {
     });
   } catch (err) {
     console.error('Registration error:', err);
+    if (err.code === 11000) {
+      return res.status(400).json({ error: 'A duplicate entry exists for a unique field (e.g. Employee ID or Phone). Please verify your details.' });
+    }
     res.status(500).json({ error: 'Internal server error during registration.' });
   }
 }

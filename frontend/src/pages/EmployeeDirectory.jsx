@@ -338,15 +338,24 @@ const EmployeeDirectory = () => {
                   ) : (
                     pendingEmployees.map((emp) => (
                       <tr key={emp._id} onClick={() => setSelectedEmployee(emp)} className="hover:bg-slate-50 dark:hover:bg-[#1E293B]/50 transition-colors cursor-pointer group">
-                        <td className="px-6 py-4 font-semibold flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden flex-shrink-0">
-                            {emp.photoUrl ? (
-                              <img src={emp.photoUrl} alt="ID" className="w-full h-full object-cover" />
-                            ) : (
-                              <User className="w-5 h-5 m-1.5 text-slate-400" />
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col gap-1">
+                            <div className="font-semibold flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden flex-shrink-0">
+                                {emp.photoUrl ? (
+                                  <img src={emp.photoUrl} alt="ID" className="w-full h-full object-cover" />
+                                ) : (
+                                  <User className="w-5 h-5 m-1.5 text-slate-400" />
+                                )}
+                              </div>
+                              {emp.fullName}
+                            </div>
+                            {emp.isReactivationRequested && (
+                              <span className="inline-block mt-1 text-[10px] uppercase font-bold tracking-wider text-red-500 bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20 w-fit">
+                                Re-admission Request - Previously Removed
+                              </span>
                             )}
                           </div>
-                          {emp.fullName}
                         </td>
                         <td className="px-6 py-4 text-slate-500 dark:text-[#94A3B8]">{emp.officialEmail}</td>
                         <td className="px-6 py-4 text-xs font-semibold text-slate-600 dark:text-slate-300">{emp.jobTitle || 'N/A'}</td>

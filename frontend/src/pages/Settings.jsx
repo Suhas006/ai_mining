@@ -6,6 +6,11 @@ import { useAuth } from '../context/AuthContext';
 const Settings = () => {
   const { theme, toggleTheme } = useTheme();
   const { user } = useAuth();
+  
+  const rawRole = (user?.role || localStorage.getItem('role') || '').toLowerCase();
+  const isAdmin = rawRole === 'admin' || rawRole === 'administrator';
+  const isEmp = rawRole === 'emp' || rawRole === 'employee' || rawRole === 'surveyor';
+  const isUser = rawRole === 'user';
 
   return (
     <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 relative">
@@ -69,7 +74,7 @@ const Settings = () => {
           </div>
           
           {/* Admin-Only Settings */}
-          {user?.role === 'admin' && (
+          {isAdmin && (
             <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-6 shadow-sm dark:shadow-none dark:backdrop-blur-sm">
               <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
                 <Shield className="w-5 h-5 text-red-500" /> Enterprise Security & API
@@ -102,7 +107,7 @@ const Settings = () => {
           )}
 
           {/* Employee-Only Settings */}
-          {user?.role === 'emp' && (
+          {isEmp && (
             <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-6 shadow-sm dark:shadow-none dark:backdrop-blur-sm">
               <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
                 <Settings2 className="w-5 h-5 text-[#F59E0B]" /> Field Surveyor Preferences
@@ -128,7 +133,7 @@ const Settings = () => {
           )}
 
           {/* User-Only Settings */}
-          {user?.role === 'user' && (
+          {isUser && (
             <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-6 shadow-sm dark:shadow-none dark:backdrop-blur-sm">
               <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
                 <Bell className="w-5 h-5 text-[#10B981]" /> Account & Notifications

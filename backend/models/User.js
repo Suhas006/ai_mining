@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const UserSchema = new mongoose.Schema({
   fullName: { type: String, required: true },
   officialEmail: { type: String, required: true, unique: true },
-  employeeId: { type: String, required: true, unique: true }, // e.g. TN-MIN-2026-91
+  employeeId: { type: String, required: true, unique: true, sparse: true }, // e.g. TN-MIN-2026-91
   passwordHash: { type: String, required: true },
   
   department: {
@@ -36,9 +36,12 @@ const UserSchema = new mongoose.Schema({
   },
   
   // New fields for Role-Based Registration & Approval Queue
+  isDeleted: { type: Boolean, default: false },
+  deletedAt: { type: Date, default: null },
+  isReactivationRequested: { type: Boolean, default: false },
   status: {
     type: String,
-    enum: ['Pending', 'Active'],
+    enum: ['Pending', 'Active', 'pending', 'active', 'rejected', 'removed', 'reactivation_pending'],
     default: 'Active'
   },
   registrationType: {
