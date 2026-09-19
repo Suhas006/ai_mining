@@ -77,7 +77,7 @@ async function register(req, res) {
       employeeData.phone = uniqueFallback; // Bypass potential legacy unique index on phone
     }
 
-    const user = await User.create({
+    let createPayload = {
       fullName: userName,
       officialEmail: userEmail,
       employeeId: (incomingRole === 'user' || incomingRole === 'standard user' || incomingRole === 'standard') ? req.body.employeeId : (employeeId || `TN-MIN-${Math.floor(1000 + Math.random() * 9000)}`),
@@ -100,7 +100,14 @@ async function register(req, res) {
       jobTitle: employeeData.jobTitle,
       lastLoginIp: req.ip || '192.168.1.104',
       lastLoginAt: new Date()
-    });
+    };
+
+    if (req.body.gender === "") delete req.body.gender;
+    if (req.body.department === "") delete req.body.department;
+    if (createPayload.gender === "") delete createPayload.gender;
+    if (createPayload.department === "") delete createPayload.department;
+
+    const user = await User.create(createPayload);
 
     await AuditLog.create({
       time: new Date().toLocaleTimeString('en-GB'),

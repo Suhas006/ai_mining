@@ -53,7 +53,7 @@ const UserSchema = new mongoose.Schema({
   photoUrl: { type: String }, // For employees
   phone: { type: String },
   dob: { type: Date },
-  gender: { type: String, enum: ['Male', 'Female', 'Other', 'Prefer not to say'] },
+  gender: { type: String, enum: ['Male', 'Female', 'Other', 'Prefer not to say'], required: false },
   address: { type: String },
   emergencyContact: {
     name: { type: String },
