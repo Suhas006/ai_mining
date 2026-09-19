@@ -93,20 +93,31 @@ export default function MapView({ scannedBoundaries = [] }) {
   const handleSearch = async (query) => {
     if (!query || query.trim().length < 2) return;
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&extratags=1&limit=5`);
+      const res = await fetch(`https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?singleLine=${encodeURIComponent(query)}&f=json&maxLocations=5`);
       const data = await res.json();
-      setSearchResults(data || []);
-    } catch (err) { }
+      if (data && data.candidates && data.candidates.length > 0) {
+        setSearchResults(data.candidates);
+      } else {
+        setSearchResults([]);
+      }
+    } catch (err) { 
+      setSearchResults([]);
+    }
   };
 
   const handleSelectLocation = (result) => {
-    const lat = parseFloat(result.lat);
-    const lng = parseFloat(result.lon);
+    if (!result || !result.location) {
+      alert("Location coordinates not found.");
+      return;
+    }
+    const { y: lat, x: lng } = result.location;
+    const address = result.address || "Unknown Location";
+    
     setFlyTarget([lat, lng]);
     setFlyZoom(18); // Zoom level 18 for high-res satellite inspection
-    setSearchPin({ lat, lng, name: result.display_name });
+    setSearchPin({ lat, lng, name: address });
     setSearchResults([]);
-    setSearchQuery(result.display_name.split(',')[0]);
+    setSearchQuery(address.split(',')[0] || address);
   };
 
   const anomalyStyle = { color: '#EF4444', weight: 3.5, fillColor: '#EF4444', fillOpacity: 0.55 };
@@ -164,8 +175,8 @@ export default function MapView({ scannedBoundaries = [] }) {
                 <div key={idx} onClick={() => handleSelectLocation(item)} className="p-2.5 hover:bg-[#0EA5E9]/20 border-b border-[#1E293B] last:border-0 cursor-pointer flex items-center gap-2 transition-all text-xs">
                   <MapPin size={20} className="text-[#0EA5E9] shrink-0" />
                   <div className="overflow-hidden">
-                    <span className="font-bold text-white block truncate">{item.display_name.split(',')[0]}</span>
-                    <span className="text-[10px] text-[#94A3B8] block truncate">{item.display_name}</span>
+                    <span className="font-bold text-white block truncate">{item.address.split(',')[0]}</span>
+                    <span className="text-[10px] text-[#94A3B8] block truncate">{item.address}</span>
                   </div>
                 </div>
               ))}
