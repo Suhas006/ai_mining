@@ -205,6 +205,10 @@ async function login(req, res) {
        return res.status(401).json({ error: 'Invalid credentials or user not found.' });
     }
 
+    if (user.isDeleted === true || user.status === 'removed') {
+        return res.status(403).json({ error: "Access Denied: This account has been removed from the enterprise grid. Please contact the Administrator for re-admission." });
+    }
+
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) {
       return res.status(401).json({ error: 'Invalid credentials.' });
