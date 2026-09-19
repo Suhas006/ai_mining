@@ -77,12 +77,12 @@ export default function MapView({ scannedBoundaries = [] }) {
   const tileProviders = {
     satellite: {
       url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-      attribution: "Esri"
+      attribution: "Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
     },
     hybrid: {
       url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
       labelsUrl: "https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}",
-      attribution: "Esri"
+      attribution: "Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
     },
     dark: {
       url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
@@ -93,7 +93,7 @@ export default function MapView({ scannedBoundaries = [] }) {
   const handleSearch = async (query) => {
     if (!query || query.trim().length < 2) return;
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`);
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&extratags=1&limit=5`);
       const data = await res.json();
       setSearchResults(data || []);
     } catch (err) { }
@@ -103,7 +103,7 @@ export default function MapView({ scannedBoundaries = [] }) {
     const lat = parseFloat(result.lat);
     const lng = parseFloat(result.lon);
     setFlyTarget([lat, lng]);
-    setFlyZoom(15);
+    setFlyZoom(18); // Zoom level 18 for high-res satellite inspection
     setSearchPin({ lat, lng, name: result.display_name });
     setSearchResults([]);
     setSearchQuery(result.display_name.split(',')[0]);
@@ -120,7 +120,7 @@ export default function MapView({ scannedBoundaries = [] }) {
         {/* Search Bar */}
         <div className="pointer-events-auto relative flex flex-col items-start justify-start">
           <div 
-            className={`relative flex bg-[#131B2B]/95 backdrop-blur-md border border-[#1E293B] rounded-full shadow-2xl items-center transition-all duration-300 ease-in-out overflow-hidden ${
+            className={`relative flex bg-[#0B1120]/80 backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] rounded-full items-center transition-all duration-300 ease-in-out overflow-hidden ${
               isSearchExpanded ? 'w-64 p-2 h-12' : 'w-12 h-12 p-0 flex items-center justify-center cursor-pointer'
             }`}
             onClick={() => { if (!isSearchExpanded) setIsSearchExpanded(true); }}
