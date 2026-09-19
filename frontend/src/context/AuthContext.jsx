@@ -64,7 +64,8 @@ export const AuthProvider = ({ children }) => {
       return { 
         success: false, 
         error: err.response?.data?.error || 'Failed to register.',
-        code: err.response?.data?.code
+        code: err.response?.data?.code,
+        status: err.response?.status
       };
     }
   };

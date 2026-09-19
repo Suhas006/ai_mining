@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { 
   ShieldCheck, Mail, Lock, User, FileText, Upload, ArrowRight, ArrowLeft, 
@@ -99,11 +100,23 @@ const Register = () => {
         navigate('/');
       }
     } else {
-      if (res.code === 'PREVIOUSLY_REMOVED' && !isReactivation) {
+      if (res.status === 409) {
         setShowReactivationPrompt(true);
-      } else {
-        setError(res.error || 'Registration failed.');
+        setError("This account was previously removed.");
+        return;
       }
+      setError(res.error || 'Registration failed.');
+    }
+  };
+
+  const handleReactivationSubmit = async () => {
+    try {
+      await axios.post('https://ai-mining.onrender.com/api/auth/register', { ...formData, requestReactivation: true });
+      setSuccessMsg("Re-admission request sent successfully! Awaiting Admin clearance.");
+      setShowReactivationPrompt(false);
+      setTimeout(() => navigate('/login'), 4000);
+    } catch (err) {
+      setError(err.response?.data?.error || "Failed to submit request.");
     }
   };
 
@@ -134,33 +147,7 @@ const Register = () => {
     <div className="min-h-screen flex-1 bg-slate-50 dark:bg-[#0B0F17] flex items-center justify-center p-4">
       <div className="absolute top-[-20%] right-[-10%] w-[50%] h-[50%] bg-[#0EA5E9]/10 blur-[120px] rounded-full pointer-events-none"></div>
       
-      {showReactivationPrompt && (
-        <div className="fixed inset-0 z-[5000] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
-          <div className="bg-white dark:bg-[#0F172A] w-full max-w-md rounded-2xl shadow-2xl p-6 border border-[#0EA5E9]/20 flex flex-col items-center text-center">
-            <div className="w-16 h-16 bg-[#0EA5E9]/10 rounded-full flex items-center justify-center mb-4">
-              <ShieldCheck className="w-8 h-8 text-[#0EA5E9]" />
-            </div>
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Re-Admission Needed</h3>
-            <p className="text-slate-500 dark:text-[#94A3B8] mb-6 text-sm">
-              This account was previously removed from DepthFence. Do you want to submit a re-admission request to the Administrator?
-            </p>
-            <div className="flex w-full gap-3">
-              <button 
-                onClick={() => setShowReactivationPrompt(false)}
-                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-lg transition-colors"
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={() => { setShowReactivationPrompt(false); handleSubmit(null, true); }}
-                className="flex-1 py-2.5 bg-gradient-to-r from-[#0EA5E9] to-[#2563EB] hover:from-[#0284C7] hover:to-[#1D4ED8] text-white font-bold rounded-lg shadow-lg transition-colors"
-              >
-                Request Re-Admission
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Modal Removed */}
 
       <div className={`w-full relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-700 mt-12 mb-12 ${formData.registrationType === 'Employee' ? 'max-w-3xl' : 'max-w-md'}`}>
         <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 dark:backdrop-blur-xl rounded-2xl p-8 shadow-2xl">
@@ -213,14 +200,27 @@ const Register = () => {
                   {renderInput('Email Address', <Mail className="w-5 h-5 text-slate-400" />, 'email', 'email', 'Enter your email', true)}
                   {renderInput('Password', <Lock className="w-5 h-5 text-slate-400" />, 'password', 'password', '••••••••', true)}
 
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full flex justify-center items-center gap-2 py-3 px-4 mt-6 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-gradient-to-r from-[#0EA5E9] to-[#2563EB] hover:from-[#0284C7] hover:to-[#1D4ED8] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0EA5E9] transition-all disabled:opacity-50"
-                  >
-                    {isSubmitting ? 'SUBMITTING...' : 'REQUEST CLEARANCE'}
-                    {!isSubmitting && <ArrowRight className="w-4 h-4" />}
-                  </button>
+                  {!showReactivationPrompt && (
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="w-full flex justify-center items-center gap-2 py-3 px-4 mt-6 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-gradient-to-r from-[#0EA5E9] to-[#2563EB] hover:from-[#0284C7] hover:to-[#1D4ED8] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0EA5E9] transition-all disabled:opacity-50"
+                    >
+                      {isSubmitting ? 'SUBMITTING...' : 'REQUEST CLEARANCE'}
+                      {!isSubmitting && <ArrowRight className="w-4 h-4" />}
+                    </button>
+                  )}
+                  {showReactivationPrompt && (
+                    <div className="mt-4 p-4 border border-yellow-500 bg-yellow-500/10 rounded">
+                      <p className="text-sm text-yellow-600 dark:text-yellow-400 mb-3 text-center">
+                        ⚠️ You were previously removed from the system. Would you like to request re-admission from the Administrator?
+                      </p>
+                      <div className="flex gap-2 justify-center">
+                        <button type="button" onClick={() => setShowReactivationPrompt(false)} className="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 text-slate-700 dark:text-slate-300 rounded">Cancel</button>
+                        <button type="button" onClick={handleReactivationSubmit} className="px-3 py-1.5 text-sm bg-yellow-500 text-white rounded font-medium shadow">Yes, Request Access</button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -351,15 +351,29 @@ const Register = () => {
                           Back
                         </button>
                         
-                        <button
-                          type="submit"
-                          disabled={isSubmitting}
-                          className="flex justify-center items-center gap-2 py-3 px-8 rounded-lg shadow-sm text-sm font-bold text-white bg-gradient-to-r from-[#0EA5E9] to-[#2563EB] hover:from-[#0284C7] hover:to-[#1D4ED8] focus:outline-none focus:ring-2 focus:ring-[#0EA5E9] transition-all disabled:opacity-50"
-                        >
-                          {isSubmitting ? 'SUBMITTING...' : 'COMPLETE REGISTRATION'}
-                          {!isSubmitting && <ShieldCheck className="w-4 h-4" />}
-                        </button>
+                        {!showReactivationPrompt && (
+                          <button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="flex justify-center items-center gap-2 py-3 px-8 rounded-lg shadow-sm text-sm font-bold text-white bg-gradient-to-r from-[#0EA5E9] to-[#2563EB] hover:from-[#0284C7] hover:to-[#1D4ED8] focus:outline-none focus:ring-2 focus:ring-[#0EA5E9] transition-all disabled:opacity-50"
+                          >
+                            {isSubmitting ? 'SUBMITTING...' : 'COMPLETE REGISTRATION'}
+                            {!isSubmitting && <ShieldCheck className="w-4 h-4" />}
+                          </button>
+                        )}
                       </div>
+                      
+                      {showReactivationPrompt && (
+                        <div className="mt-6 p-4 border border-yellow-500 bg-yellow-500/10 rounded w-full">
+                          <p className="text-sm text-yellow-600 dark:text-yellow-400 mb-3 text-center">
+                            ⚠️ You were previously removed from the system. Would you like to request re-admission from the Administrator?
+                          </p>
+                          <div className="flex gap-2 justify-center">
+                            <button type="button" onClick={() => setShowReactivationPrompt(false)} className="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 text-slate-700 dark:text-slate-300 rounded">Cancel</button>
+                            <button type="button" onClick={handleReactivationSubmit} className="px-3 py-1.5 text-sm bg-yellow-500 text-white rounded font-medium shadow">Yes, Request Access</button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 
