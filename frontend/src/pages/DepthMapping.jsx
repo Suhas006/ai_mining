@@ -21,7 +21,7 @@ const pointMarkerIcon = createCustomIcon('#0EA5E9');
 
 function UnifiedMapController({ target, groundLat, groundLng }) {
   const map = useMap();
-  
+
   useEffect(() => {
     if (target && Array.isArray(target) && target.length === 2 && !isNaN(target[0])) {
       map.flyTo(target, 18, { animate: true, duration: 1.5 });
@@ -69,7 +69,7 @@ const DepthMapping = () => {
   const { user } = useAuth();
   const { state } = useLocation();
   const navigate = useNavigate();
-  
+
   const [surveyMode, setSurveyMode] = useState('macro');
 
   const [baseLat, setBaseLat] = useState('');
@@ -86,7 +86,7 @@ const DepthMapping = () => {
   const [results, setResults] = useState(null);
   const [activePicker, setActivePicker] = useState(null);
 
-  const [mapType, setMapType] = useState('satellite');
+  const [mapType, setMapType] = useState('hybrid');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
@@ -100,7 +100,7 @@ const DepthMapping = () => {
     if (state?.autoSearch) {
       const query = state.autoSearch;
       setSearchQuery(query);
-      
+
       const doAutoSearch = async () => {
         try {
           // Check for coordinates bypass first
@@ -117,7 +117,7 @@ const DepthMapping = () => {
               return;
             }
           }
-          
+
           const searchQuery = query;
           const res = await fetch(`https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?singleLine=${encodeURIComponent(searchQuery)}&countryCode=IN&f=json&maxLocations=1`);
           const data = await res.json();
@@ -130,7 +130,7 @@ const DepthMapping = () => {
           alert("Could not auto-locate complaint address. Please enter coordinates manually.");
         }
       };
-      
+
       doAutoSearch();
     }
   }, [state]);
@@ -149,7 +149,7 @@ const DepthMapping = () => {
 
   const handleSearch = async (query) => {
     if (!query || query.trim().length < 2) return;
-    
+
     // Check for coordinates bypass
     const coordRegex = /^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?)[,\s]+[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/;
     if (coordRegex.test(query.trim())) {
@@ -175,7 +175,7 @@ const DepthMapping = () => {
       } else {
         setSearchResults([]);
       }
-    } catch (err) { 
+    } catch (err) {
       setSearchResults([]);
     }
   };
@@ -187,7 +187,7 @@ const DepthMapping = () => {
     }
     const { y: lat, x: lng } = result.location;
     const address = result.address || "Unknown Location";
-    
+
     setFlyTarget([lat, lng]);
     setMapTarget([lat, lng]);
     setFlyZoom(18);
@@ -284,19 +284,19 @@ const DepthMapping = () => {
           const exactZAxis = Math.abs(zDifference).toFixed(2);
           const floorCount = Math.round(exactZAxis / 3.2);
 
-            setResults({
-              mode: 'macro',
-              baseElev: baseData.elevation.toFixed(2),
-              targetElev: targetData.elevation.toFixed(2),
-              exactZAxis: exactZAxis,
-              type: isDig ? 'Underground Infrastructure (Subsurface Rights)' : 'Vertical Property (Height)',
-              floorCount: isDig ? 0 : floorCount,
-              isDig: isDig,
-              dataSource: targetData.dataSource
-            });
-            incrementUlpins();
-            addAuditLog('3D ULPIN Minted', user?.email || 'Unknown User');
-          }
+          setResults({
+            mode: 'macro',
+            baseElev: baseData.elevation.toFixed(2),
+            targetElev: targetData.elevation.toFixed(2),
+            exactZAxis: exactZAxis,
+            type: isDig ? 'Underground Infrastructure (Subsurface Rights)' : 'Vertical Property (Height)',
+            floorCount: isDig ? 0 : floorCount,
+            isDig: isDig,
+            dataSource: targetData.dataSource
+          });
+          incrementUlpins();
+          addAuditLog('3D ULPIN Minted', user?.email || 'Unknown User');
+        }
       } catch (error) { }
     } else {
       if (!shadowLength || !solarAngle) {
@@ -372,7 +372,7 @@ const DepthMapping = () => {
 
   return (
     <div className="relative flex w-full h-full p-4 gap-4 bg-[#0B0F17] overflow-hidden">
-      
+
       {/* Layer 1: Base Map */}
       <div className={`absolute inset-0 z-0 transition-opacity duration-500 ${isMapActive ? 'opacity-100' : 'opacity-0'}`}>
         <MapContainer
@@ -385,32 +385,35 @@ const DepthMapping = () => {
           maxBoundsViscosity={1.0}
           className="absolute inset-0 z-0 h-full w-full"
         >
-        <ZoomControl position="bottomright" />
-        <UnifiedMapController target={mapTarget} groundLat={baseLat} groundLng={baseLng} />
+          <ZoomControl position="bottomright" />
+          <UnifiedMapController target={mapTarget} groundLat={baseLat} groundLng={baseLng} />
 
-        <TileLayer
-          url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-          attribution="Tiles &copy; Esri"
-          maxNativeZoom={18}
-          maxZoom={22}
-        />
-        <TileLayer
-          url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
-          maxNativeZoom={18}
-          maxZoom={22}
-        />
+          <TileLayer
+            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+            attribution="Tiles &copy; Esri"
+            maxNativeZoom={18}
+            maxZoom={22}
+          />
+          {/* Only show hybrid labels if mapType is set to hybrid */}
+          {mapType === 'hybrid' && (
+            <TileLayer
+              url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
+              maxNativeZoom={18}
+              maxZoom={22}
+            />
+          )}
 
-        {searchPin && (
-          <Marker position={[searchPin.lat, searchPin.lng]} icon={searchMarkerIcon}>
-            <Popup><div className="text-xs font-mono"><div className="font-bold text-[#F59E0B]">SEARCH PIN</div><div className="text-white">{searchPin.name}</div></div></Popup>
-          </Marker>
-        )}
+          {searchPin && (
+            <Marker position={[searchPin.lat, searchPin.lng]} icon={searchMarkerIcon}>
+              <Popup><div className="text-xs font-mono"><div className="font-bold text-[#F59E0B]">SEARCH PIN</div><div className="text-white">{searchPin.name}</div></div></Popup>
+            </Marker>
+          )}
 
-        {microPoint1 && (
-          <Marker position={[microPoint1.lat, microPoint1.lng]} icon={pointMarkerIcon}>
-            <Popup><div className="text-xs font-mono font-bold text-[#0EA5E9]">Base of Building</div></Popup>
-          </Marker>
-        )}
+          {microPoint1 && (
+            <Marker position={[microPoint1.lat, microPoint1.lng]} icon={pointMarkerIcon}>
+              <Popup><div className="text-xs font-mono font-bold text-[#0EA5E9]">Base of Building</div></Popup>
+            </Marker>
+          )}
 
           <LocationPicker />
         </MapContainer>
@@ -588,8 +591,8 @@ const DepthMapping = () => {
                 )}
               </div>
 
-              {/* CONTROLS */}
-              <div className="pointer-events-auto bg-[#131B2B]/95 backdrop-blur-md border border-[#1E293B] rounded-full p-1.5 shadow-2xl flex items-center gap-1.5 text-xs">
+              {/* CONTROLS - Now completely hidden when the map is idle */}
+              <div className={`pointer-events-auto bg-[#131B2B]/95 backdrop-blur-md border border-[#1E293B] rounded-full p-1.5 shadow-2xl flex items-center gap-1.5 text-xs transition-opacity duration-500 ${isMapActive ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                 <button title="Locate My GPS Position" onClick={handleLocateMe} className="w-9 h-9 flex items-center justify-center rounded-full transition-all text-[#94A3B8] hover:text-[#0EA5E9] hover:bg-[#1E293B]">
                   <Navigation size={18} />
                 </button>
@@ -704,8 +707,8 @@ const DepthMapping = () => {
           onClick={handleFetch}
           disabled={loading}
           className={`w-full text-white text-sm font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 mb-6 transition-all ${surveyMode === 'macro'
-              ? 'bg-gradient-to-r from-[#0EA5E9] to-[#0284C7] hover:from-[#38BDF8] hover:to-[#0EA5E9]'
-              : 'bg-gradient-to-r from-[#F59E0B] to-[#D97706] hover:from-[#FBBF24] hover:to-[#F59E0B]'
+            ? 'bg-gradient-to-r from-[#0EA5E9] to-[#0284C7] hover:from-[#38BDF8] hover:to-[#0EA5E9]'
+            : 'bg-gradient-to-r from-[#F59E0B] to-[#D97706] hover:from-[#FBBF24] hover:to-[#F59E0B]'
             } disabled:opacity-50`}
         >
           {loading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Activity className="w-4 h-4" />}
