@@ -5,7 +5,7 @@ import { Search, MapPin, Eye, Clock, User, Phone, Shield } from 'lucide-react';
 import axios from 'axios';
 
 export default function EmployeeDashboard() {
-  const { token, user } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,9 +17,9 @@ export default function EmployeeDashboard() {
   const fetchPendingComplaints = async () => {
     setLoading(true);
     try {
-      const rawUser = localStorage.getItem('user');
+      const rawUser = localStorage.getItem('depthfence_user');
       const parsedUser = rawUser ? JSON.parse(rawUser) : null;
-      const currentToken = localStorage.getItem('token') || parsedUser?.token || localStorage.getItem('jwt') || token;
+      const currentToken = user?.token || localStorage.getItem('depthfence_token') || parsedUser?.token;
       
       if (!currentToken) {
         console.error("JWT Token is missing from local storage.");

@@ -4,7 +4,8 @@ import { FileText, List, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import axios from 'axios';
 
 export default function StandardUserDashboard() {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
+  const token = user?.token || localStorage.getItem('depthfence_token');
   const [activeTab, setActiveTab] = useState('new'); // 'new' or 'list'
   
   // Form State
