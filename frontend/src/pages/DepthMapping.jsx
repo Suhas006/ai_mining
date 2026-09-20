@@ -106,6 +106,7 @@ const DepthMapping = () => {
   const [flyZoom, setFlyZoom] = useState(14);
   const [searchPin, setSearchPin] = useState(null);
   const [mapTarget, setMapTarget] = useState(null);
+  const [showMap, setShowMap] = useState(false);
 
   useEffect(() => {
     if (state?.autoSearch) {
@@ -390,7 +391,7 @@ const DepthMapping = () => {
         zoomControl={false}
         maxBounds={[[-90, -180], [90, 180]]}
         maxBoundsViscosity={1.0}
-        className={`absolute inset-0 z-0 h-full w-full transition-opacity duration-700 ${isIdle ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+        className={`absolute inset-0 z-0 h-full w-full transition-opacity duration-500 ${(showMap || !isIdle) ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
       >
         <ZoomControl position="bottomright" />
         <MapFlyController targetLocation={flyTarget} targetZoom={flyZoom} />
@@ -447,11 +448,13 @@ const DepthMapping = () => {
         />
 
         {isIdle && !loading && (
-          <div className="z-10 text-center animate-pulse">
-            <Cuboid className="w-20 h-20 text-[#1E293B] mx-auto mb-4" />
-            <p className="text-[#475569] font-medium tracking-widest uppercase text-sm">
-              {surveyMode === 'macro' ? 'Awaiting Global GPS Coordinates' : 'Awaiting Shadow Telemetry Parameters'}
-            </p>
+          <div className={`absolute inset-0 flex flex-col items-center justify-center transition-opacity duration-500 ${(showMap || !isIdle) ? 'opacity-0 pointer-events-none' : 'opacity-100 z-10'}`}>
+            <div className="text-center animate-pulse">
+              <Cuboid className="w-20 h-20 text-[#1E293B] mx-auto mb-4" />
+              <p className="text-[#475569] font-medium tracking-widest uppercase text-sm">
+                {surveyMode === 'macro' ? 'Awaiting Global GPS Coordinates' : 'Awaiting Shadow Telemetry Parameters'}
+              </p>
+            </div>
           </div>
         )}
 
@@ -542,7 +545,7 @@ const DepthMapping = () => {
         )}
 
         {/* INTERACTIVE MAP OVERLAY CONTROLS */}
-        {activePicker && (
+        {true && (
           <div className="absolute inset-0 w-full h-full rounded-xl overflow-hidden z-50 pointer-events-none">
             <div className="absolute top-4 left-4 right-4 z-[1000] flex justify-between pointer-events-none">
 
@@ -558,6 +561,7 @@ const DepthMapping = () => {
                         e.stopPropagation();
                         if (!searchQuery) setIsSearchExpanded(false);
                       }
+                      setShowMap(!showMap);
                     }}
                   >
                     <Search size={18} className="w-5 h-5" />
@@ -610,13 +614,15 @@ const DepthMapping = () => {
               </div>
             </div>
 
-            <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-[1000] bg-[#131B2B]/90 backdrop-blur border border-[#1E293B] text-white px-4 py-2 rounded-lg shadow-2xl text-sm font-bold flex items-center gap-2 pointer-events-none">
-              <MapPin className="w-4 h-4 text-[#0EA5E9]" />
-              {activePicker === 'ground' && 'Right-click or Tap map for Reference Ground'}
-              {activePicker === 'target' && 'Right-click or Tap map for Target'}
-              {activePicker === 'shadowPoint1' && 'Click the BASE of the building/object'}
-              {activePicker === 'shadowPoint2' && 'Click the TIP of the shadow'}
-            </div>
+            {activePicker && (
+              <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-[1000] bg-[#131B2B]/90 backdrop-blur border border-[#1E293B] text-white px-4 py-2 rounded-lg shadow-2xl text-sm font-bold flex items-center gap-2 pointer-events-none">
+                <MapPin className="w-4 h-4 text-[#0EA5E9]" />
+                {activePicker === 'ground' && 'Right-click or Tap map for Reference Ground'}
+                {activePicker === 'target' && 'Right-click or Tap map for Target'}
+                {activePicker === 'shadowPoint1' && 'Click the BASE of the building/object'}
+                {activePicker === 'shadowPoint2' && 'Click the TIP of the shadow'}
+              </div>
+            )}
 
           </div>
         )}
