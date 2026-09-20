@@ -368,13 +368,13 @@ const DepthMapping = () => {
   };
 
   const isIdle = !results && !activePicker && !mapTarget;
-  const mapIsVisible = showMap || !isIdle;
+  const isMapActive = showMap || Boolean(targetLat) || Boolean(results) || Boolean(shadowLength) || loading || !isIdle;
 
   return (
     <div className="relative flex w-full h-full p-4 gap-4 bg-[#0B0F17] overflow-hidden">
       
       {/* Layer 1: Base Map */}
-      <div className={`absolute inset-0 z-0 transition-opacity duration-500 ${mapIsVisible ? 'opacity-100' : 'opacity-0'}`}>
+      <div className={`absolute inset-0 z-0 transition-opacity duration-500 ${isMapActive ? 'opacity-100' : 'opacity-0'}`}>
         <MapContainer
           center={[20.5937, 78.9629]}
           zoom={5}
@@ -427,7 +427,7 @@ const DepthMapping = () => {
         )}
 
         {/* Layer 2: The Dark Idle Screen (Middle) */}
-        <div className={`absolute inset-0 z-10 flex items-center justify-center bg-[#0B1120] transition-opacity duration-500 ${mapIsVisible ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+        <div className={`absolute inset-0 z-10 flex items-center justify-center bg-[#0B1120] transition-opacity duration-500 ${isMapActive ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
           <div
             className="absolute inset-0 opacity-[0.03] pointer-events-none"
             style={{
