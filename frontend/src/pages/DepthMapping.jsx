@@ -19,33 +19,21 @@ const createCustomIcon = (color) => {
 const searchMarkerIcon = createCustomIcon('#F59E0B');
 const pointMarkerIcon = createCustomIcon('#0EA5E9');
 
-function MapFlyController({ targetLocation, targetZoom }) {
+function UnifiedMapController({ target, groundLat, groundLng }) {
   const map = useMap();
+  
   useEffect(() => {
-    if (targetLocation) {
-      map.flyTo(targetLocation, targetZoom || 15, { duration: 2.5, easeLinearity: 0.25 });
+    if (target && Array.isArray(target) && target.length === 2 && !isNaN(target[0])) {
+      map.flyTo(target, 18, { animate: true, duration: 1.5 });
     }
-  }, [targetLocation, targetZoom, map]);
-  return null;
-}
+  }, [target, map]);
 
-function MapController({ groundLat, groundLng }) {
-  const map = useMap();
   useEffect(() => {
     if (groundLat && groundLng && !isNaN(groundLat) && !isNaN(groundLng)) {
       map.flyTo([parseFloat(groundLat), parseFloat(groundLng)], 18, { animate: true, duration: 1.5 });
     }
   }, [groundLat, groundLng, map]);
-  return null;
-}
 
-function MapCamera({ target }) {
-  const map = useMap();
-  useEffect(() => {
-    if (target) {
-      map.flyTo(target, 18, { animate: true, duration: 1.5 });
-    }
-  }, [target, map]);
   return null;
 }
 
@@ -396,9 +384,7 @@ const DepthMapping = () => {
           className="absolute inset-0 z-0 h-full w-full"
         >
         <ZoomControl position="bottomright" />
-        <MapFlyController targetLocation={flyTarget} targetZoom={flyZoom} />
-        <MapController groundLat={baseLat} groundLng={baseLng} />
-        <MapCamera target={mapTarget} />
+        <UnifiedMapController target={mapTarget} groundLat={baseLat} groundLng={baseLng} />
 
         <TileLayer
           url={tileProviders[mapType].url}
@@ -440,20 +426,19 @@ const DepthMapping = () => {
           </div>
         )}
 
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: `linear-gradient(#38BDF8 1px, transparent 1px), linear-gradient(90deg, #38BDF8 1px, transparent 1px)`,
-            backgroundSize: '40px 40px',
-            transform: 'perspective(1000px) rotateX(60deg) translateY(-100px) translateZ(-200px) scale(3)',
-            transformOrigin: 'top center'
-          }}
-        />
-
         {/* Layer 2: The Dark Idle Screen (Middle) */}
         <div className={`absolute inset-0 z-10 flex items-center justify-center bg-[#0B1120] transition-opacity duration-500 ${mapIsVisible ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+          <div
+            className="absolute inset-0 opacity-[0.03] pointer-events-none"
+            style={{
+              backgroundImage: `linear-gradient(#38BDF8 1px, transparent 1px), linear-gradient(90deg, #38BDF8 1px, transparent 1px)`,
+              backgroundSize: '40px 40px',
+              transform: 'perspective(1000px) rotateX(60deg) translateY(-100px) translateZ(-200px) scale(3)',
+              transformOrigin: 'top center'
+            }}
+          />
           {!loading && isIdle && (
-            <div className="text-center animate-pulse">
+            <div className="text-center animate-pulse relative z-20">
               <Cuboid className="w-20 h-20 text-[#1E293B] mx-auto mb-4" />
               <p className="text-[#475569] font-medium tracking-widest uppercase text-sm">
                 {surveyMode === 'macro' ? 'Awaiting Global GPS Coordinates' : 'Awaiting Shadow Telemetry Parameters'}
