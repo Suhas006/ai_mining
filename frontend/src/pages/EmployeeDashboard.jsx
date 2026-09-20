@@ -43,10 +43,12 @@ export default function EmployeeDashboard() {
   };
 
   const handleInvestigate = (complaint) => {
-    // Navigate to Z-Axis Analyzer (or similar mapping tool) with context
-    // E.g., /2d-scanner or /3d-mapping. 
-    // The requirement says "route the employee to the 3D Z-Axis Analyzer page (/z-axis-analyzer)"
-    navigate(`/z-axis-analyzer?surveyNumber=${encodeURIComponent(complaint.propertyDetails.surveyNumber || '')}&address=${encodeURIComponent(complaint.propertyDetails.address || '')}`);
+    navigate('/z-axis-analyzer', { 
+      state: { 
+        autoSearch: complaint.propertyDetails.surveyNumber || complaint.propertyDetails.address, 
+        complaintId: complaint._id 
+      } 
+    });
   };
 
   return (

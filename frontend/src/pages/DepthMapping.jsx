@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, useMapEvents, useMap, ZoomControl, Marker, Popup } from 'react-leaflet';
+import { useLocation } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Cuboid, ArrowDownToLine, ArrowUpToLine, MapPin, Activity, Map as MapIcon, Search, Layers, Globe, Sun, Building, Mountain, Navigation } from 'lucide-react';
+import { Cuboid, ArrowDownToLine, ArrowUpToLine, MapPin, Activity, Map as MapIcon, Search, Layers, Globe, Sun, Building, Mountain, Navigation, AlertCircle } from 'lucide-react';
 import { useLiveData } from '../context/LiveDataContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -58,6 +59,7 @@ const calculateSolarAngle = (lat, lng) => {
 const DepthMapping = () => {
   const { incrementUlpins, addAuditLog } = useLiveData();
   const { user } = useAuth();
+  const { state } = useLocation();
   
   const [surveyMode, setSurveyMode] = useState('macro');
 
@@ -82,6 +84,39 @@ const DepthMapping = () => {
   const [flyTarget, setFlyTarget] = useState(null);
   const [flyZoom, setFlyZoom] = useState(14);
   const [searchPin, setSearchPin] = useState(null);
+
+  useEffect(() => {
+    if (state?.autoSearch) {
+      const query = state.autoSearch;
+      setSearchQuery(query);
+      
+      const doAutoSearch = async () => {
+        try {
+          // Check for coordinates bypass first
+          const coordRegex = /^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?)[,\s]+[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/;
+          if (coordRegex.test(query.trim())) {
+            const parts = query.trim().split(/[,\s]+/);
+            if (parts.length >= 2) {
+              const lat = parseFloat(parts[0]);
+              const lng = parseFloat(parts[1]);
+              setFlyTarget([lat, lng]);
+              setFlyZoom(18);
+              setSearchPin({ lat, lng, name: `Coordinates: ${lat}, ${lng}` });
+              return;
+            }
+          }
+          
+          const res = await fetch(`https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?singleLine=${encodeURIComponent(query)}&f=json&maxLocations=1`);
+          const data = await res.json();
+          if (data?.candidates?.length > 0) {
+            handleSelectLocation(data.candidates[0]);
+          }
+        } catch (err) {}
+      };
+      
+      doAutoSearch();
+    }
+  }, [state]);
 
   const tileProviders = {
     satellite: {
@@ -290,6 +325,13 @@ const DepthMapping = () => {
   return (
     <div className="flex w-full h-full p-4 gap-4 bg-[#0B0F17]">
       <div className="flex-[4] h-full rounded-xl overflow-hidden shadow-2xl border border-[#1E293B] relative bg-[#0F172A] flex flex-col items-center justify-center">
+
+        {state?.complaintId && (
+          <div className="absolute top-4 right-4 z-[2000] bg-red-500/10 border border-red-500/50 text-red-500 px-4 py-2 rounded-full shadow-lg flex items-center gap-2 animate-pulse backdrop-blur-md">
+            <AlertCircle className="w-4 h-4" />
+            <span className="text-xs font-bold uppercase tracking-wider">Active Investigation: Complaint #{state.complaintId.slice(-6)}</span>
+          </div>
+        )}
 
         <div
           className="absolute inset-0 opacity-[0.03]"
