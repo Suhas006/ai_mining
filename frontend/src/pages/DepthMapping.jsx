@@ -39,6 +39,16 @@ function MapController({ groundLat, groundLng }) {
   return null;
 }
 
+function MapCamera({ target }) {
+  const map = useMap();
+  useEffect(() => {
+    if (target) {
+      map.flyTo(target, 18, { animate: true, duration: 1.5 });
+    }
+  }, [target, map]);
+  return null;
+}
+
 // 🌟 LIVE ASTRONOMICAL SOLAR ALGORITHM (100% REAL) 🌟
 const calculateSolarAngle = (lat, lng) => {
   const date = new Date();
@@ -95,6 +105,7 @@ const DepthMapping = () => {
   const [flyTarget, setFlyTarget] = useState(null);
   const [flyZoom, setFlyZoom] = useState(14);
   const [searchPin, setSearchPin] = useState(null);
+  const [mapTarget, setMapTarget] = useState(null);
 
   useEffect(() => {
     if (state?.autoSearch) {
@@ -111,6 +122,7 @@ const DepthMapping = () => {
               const lat = parseFloat(parts[0]);
               const lng = parseFloat(parts[1]);
               setFlyTarget([lat, lng]);
+              setMapTarget([lat, lng]);
               setFlyZoom(18);
               setSearchPin({ lat, lng, name: `Coordinates: ${lat}, ${lng}` });
               return;
@@ -156,6 +168,7 @@ const DepthMapping = () => {
         const lat = parseFloat(parts[0]);
         const lng = parseFloat(parts[1]);
         setFlyTarget([lat, lng]);
+        setMapTarget([lat, lng]);
         setFlyZoom(18);
         setSearchPin({ lat, lng, name: `Coordinates: ${lat}, ${lng}` });
         setSearchResults([]);
@@ -185,6 +198,7 @@ const DepthMapping = () => {
     const address = result.address || "Unknown Location";
     
     setFlyTarget([lat, lng]);
+    setMapTarget([lat, lng]);
     setFlyZoom(18);
     setSearchPin({ lat, lng, name: address });
     setSearchResults([]);
@@ -197,6 +211,7 @@ const DepthMapping = () => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
         setFlyTarget([lat, lng]);
+        setMapTarget([lat, lng]);
         setFlyZoom(19);
         setSearchPin({ lat, lng, name: "My Current Location" });
       }, (error) => {
@@ -267,6 +282,7 @@ const DepthMapping = () => {
         setLoading(false);
         return;
       }
+      setMapTarget([parseFloat(targetLat), parseFloat(targetLng)]);
       try {
         const baseData = await fetchRealElevation(baseLat, baseLng);
         const targetData = await fetchRealElevation(targetLat, targetLng);
@@ -377,6 +393,7 @@ const DepthMapping = () => {
         <ZoomControl position="bottomright" />
         <MapFlyController targetLocation={flyTarget} targetZoom={flyZoom} />
         <MapController groundLat={baseLat} groundLng={baseLng} />
+        <MapCamera target={mapTarget} />
 
         <TileLayer
           url={tileProviders[mapType].url}
