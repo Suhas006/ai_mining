@@ -118,7 +118,7 @@ const DepthMapping = () => {
             }
           }
           
-          const searchQuery = `${query}, Coimbatore, Tamil Nadu, India`;
+          const searchQuery = query;
           const res = await fetch(`https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?singleLine=${encodeURIComponent(searchQuery)}&countryCode=IN&f=json&maxLocations=1`);
           const data = await res.json();
           if (data?.candidates?.length > 0) {
@@ -167,7 +167,7 @@ const DepthMapping = () => {
     }
 
     try {
-      const searchQuery = `${query}, Coimbatore, Tamil Nadu, India`;
+      const searchQuery = query;
       const res = await fetch(`https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?singleLine=${encodeURIComponent(searchQuery)}&countryCode=IN&f=json&maxLocations=5`);
       const data = await res.json();
       if (data && data.candidates && data.candidates.length > 0) {
@@ -389,18 +389,16 @@ const DepthMapping = () => {
         <UnifiedMapController target={mapTarget} groundLat={baseLat} groundLng={baseLng} />
 
         <TileLayer
-          url={tileProviders[mapType].url}
-          attribution={tileProviders[mapType].attribution}
+          url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+          attribution="Tiles &copy; Esri"
           maxNativeZoom={18}
           maxZoom={22}
         />
-        {mapType === 'hybrid' && tileProviders.hybrid.labelsUrl && (
-          <TileLayer
-            url={tileProviders.hybrid.labelsUrl}
-            maxNativeZoom={18}
-            maxZoom={22}
-          />
-        )}
+        <TileLayer
+          url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
+          maxNativeZoom={18}
+          maxZoom={22}
+        />
 
         {searchPin && (
           <Marker position={[searchPin.lat, searchPin.lng]} icon={searchMarkerIcon}>

@@ -43,9 +43,17 @@ export default function EmployeeDashboard() {
   };
 
   const handleInvestigate = (complaint) => {
+    const locationParts = [
+      complaint.propertyDetails?.surveyNumber,
+      complaint.propertyDetails?.address,
+      complaint.propertyDetails?.district,
+      complaint.propertyDetails?.state,
+      "India"
+    ].filter(Boolean).join(", ");
+    
     navigate('/z-axis-analyzer', { 
       state: { 
-        autoSearch: complaint.propertyDetails.surveyNumber || complaint.propertyDetails.address, 
+        autoSearch: locationParts, 
         complaintId: complaint._id 
       } 
     });
