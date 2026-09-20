@@ -266,6 +266,7 @@ const DepthMapping = () => {
 
   const handleFetch = async () => {
     setLoading(true);
+    setShowMap(false); // THIS instantly drops the dark screen when you hit calculate
 
     if (surveyMode === 'macro') {
       if (!baseLat || !baseLng || !targetLat || !targetLng) {
@@ -368,7 +369,9 @@ const DepthMapping = () => {
   };
 
   const isIdle = !results && !activePicker && !mapTarget;
-  const isMapActive = showMap || Boolean(targetLat) || Boolean(results) || Boolean(shadowLength) || loading || !isIdle;
+
+  // This logic guarantees the map hides perfectly when results or loading trigger
+  const isMapActive = showMap || activePicker !== null || ((baseLat || shadowLength) && !results && !loading);
 
   return (
     <div className="relative flex w-full h-full p-4 gap-4 bg-[#0B0F17] overflow-hidden">
