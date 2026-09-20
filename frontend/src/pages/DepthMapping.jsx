@@ -118,7 +118,7 @@ const DepthMapping = () => {
             }
           }
           
-          const searchQuery = `${query}, India`;
+          const searchQuery = `${query}, Coimbatore, Tamil Nadu, India`;
           const res = await fetch(`https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?singleLine=${encodeURIComponent(searchQuery)}&countryCode=IN&f=json&maxLocations=1`);
           const data = await res.json();
           if (data?.candidates?.length > 0) {
@@ -167,7 +167,7 @@ const DepthMapping = () => {
     }
 
     try {
-      const searchQuery = `${query}, India`;
+      const searchQuery = `${query}, Coimbatore, Tamil Nadu, India`;
       const res = await fetch(`https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?singleLine=${encodeURIComponent(searchQuery)}&countryCode=IN&f=json&maxLocations=5`);
       const data = await res.json();
       if (data && data.candidates && data.candidates.length > 0) {
