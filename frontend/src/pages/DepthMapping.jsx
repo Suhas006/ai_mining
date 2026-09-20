@@ -378,21 +378,23 @@ const DepthMapping = () => {
   };
 
   const isIdle = !results && !activePicker && !mapTarget;
+  const mapIsVisible = showMap || !isIdle;
 
   return (
     <div className="relative flex w-full h-full p-4 gap-4 bg-[#0B0F17] overflow-hidden">
       
-      {/* 2. Map Container absolutely positioned behind all UI elements */}
-      <MapContainer
-        center={[20.5937, 78.9629]}
-        zoom={5}
-        minZoom={3}
-        maxZoom={22}
-        zoomControl={false}
-        maxBounds={[[-90, -180], [90, 180]]}
-        maxBoundsViscosity={1.0}
-        className={`absolute inset-0 z-0 h-full w-full transition-opacity duration-500 ${(showMap || !isIdle) ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
-      >
+      {/* Layer 1: Base Map */}
+      <div className={`absolute inset-0 z-0 transition-opacity duration-500 ${mapIsVisible ? 'opacity-100' : 'opacity-0'}`}>
+        <MapContainer
+          center={[20.5937, 78.9629]}
+          zoom={5}
+          minZoom={3}
+          maxZoom={22}
+          zoomControl={false}
+          maxBounds={[[-90, -180], [90, 180]]}
+          maxBoundsViscosity={1.0}
+          className="absolute inset-0 z-0 h-full w-full"
+        >
         <ZoomControl position="bottomright" />
         <MapFlyController targetLocation={flyTarget} targetZoom={flyZoom} />
         <MapController groundLat={baseLat} groundLng={baseLng} />
@@ -424,8 +426,9 @@ const DepthMapping = () => {
           </Marker>
         )}
 
-        <LocationPicker />
-      </MapContainer>
+          <LocationPicker />
+        </MapContainer>
+      </div>
 
       {/* 1. Main container holding the 3D graph (middle section) */}
       <div className={`flex-[4] h-full rounded-xl overflow-hidden shadow-2xl border border-[#1E293B] relative bg-transparent flex flex-col items-center justify-center z-10 pointer-events-none`}>
@@ -447,16 +450,17 @@ const DepthMapping = () => {
           }}
         />
 
-        {isIdle && !loading && (
-          <div className={`absolute inset-0 flex flex-col items-center justify-center transition-opacity duration-500 ${(showMap || !isIdle) ? 'opacity-0 pointer-events-none' : 'opacity-100 z-10'}`}>
+        {/* Layer 2: The Dark Idle Screen (Middle) */}
+        <div className={`absolute inset-0 z-10 flex items-center justify-center bg-[#0B1120] transition-opacity duration-500 ${mapIsVisible ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+          {!loading && isIdle && (
             <div className="text-center animate-pulse">
               <Cuboid className="w-20 h-20 text-[#1E293B] mx-auto mb-4" />
               <p className="text-[#475569] font-medium tracking-widest uppercase text-sm">
                 {surveyMode === 'macro' ? 'Awaiting Global GPS Coordinates' : 'Awaiting Shadow Telemetry Parameters'}
               </p>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {!activePicker && loading && (
           <div className="z-10 text-center">
