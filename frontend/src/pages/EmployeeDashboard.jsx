@@ -46,8 +46,6 @@ export default function EmployeeDashboard() {
     const locationParts = [
       complaint.propertyDetails?.surveyNumber,
       complaint.propertyDetails?.address,
-      complaint.propertyDetails?.district,
-      complaint.propertyDetails?.state,
       "India"
     ].filter(Boolean).join(", ");
     
