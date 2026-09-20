@@ -380,9 +380,8 @@ const DepthMapping = () => {
     <div className="relative flex w-full h-full p-4 gap-4 bg-[#0B0F17] overflow-hidden">
       
       {/* 2. Map Container absolutely positioned behind all UI elements */}
-      {results && (
-        <MapContainer
-          center={[20.5937, 78.9629]}
+      <MapContainer
+        center={[20.5937, 78.9629]}
         zoom={5}
         minZoom={3}
         maxZoom={22}
@@ -423,14 +422,13 @@ const DepthMapping = () => {
         )}
 
         <LocationPicker />
-        </MapContainer>
-      )}
+      </MapContainer>
 
       {/* 1. Main container holding the 3D graph (middle section) with dynamic background */}
-      <div className={`flex-[4] h-full rounded-xl overflow-hidden shadow-2xl border border-[#1E293B] relative flex flex-col items-center justify-center z-10 ${results ? 'bg-black/40 backdrop-blur-sm' : 'bg-[#0B1120]'} ${activePicker ? 'pointer-events-none' : ''}`}>
+      <div className={`flex-[4] h-full rounded-xl overflow-hidden shadow-2xl border border-[#1E293B] relative bg-transparent flex flex-col items-center justify-center z-10 pointer-events-none`}>
 
         {state?.complaintId && (
-          <div className="absolute top-4 right-4 z-[2000] bg-red-500/10 border border-red-500/50 text-red-500 px-4 py-2 rounded-full shadow-lg flex items-center gap-2 animate-pulse backdrop-blur-md">
+          <div className="absolute top-4 right-4 z-[2000] bg-red-500/10 border border-red-500/50 text-red-500 px-4 py-2 rounded-full shadow-lg flex items-center gap-2 animate-pulse backdrop-blur-md pointer-events-auto">
             <AlertCircle className="w-4 h-4" />
             <span className="text-xs font-bold uppercase tracking-wider">Active Investigation: Complaint #{state.complaintId.slice(-6)}</span>
           </div>
@@ -465,7 +463,7 @@ const DepthMapping = () => {
         )}
 
         {!activePicker && results && !loading && (
-          <div className="z-10 w-full h-full flex flex-col items-center justify-center relative animate-in zoom-in-95 duration-500 backdrop-blur-sm bg-black/40 rounded-xl p-8">
+          <div className="z-10 w-full h-full flex flex-col items-center justify-center relative animate-in zoom-in-95 duration-500 backdrop-blur-sm bg-black/40 rounded-xl p-8 pointer-events-auto">
             {results.mode === 'macro' && (
               !results.isDig ? (
                 <div className="flex flex-col items-center">
@@ -622,7 +620,7 @@ const DepthMapping = () => {
         )}
       </div>
 
-      <div className="flex-[1] h-full bg-[#131B2B] rounded-xl border border-[#1E293B] shadow-2xl p-5 flex flex-col overflow-y-auto relative z-20">
+      <div className="flex-[1] h-full bg-[#131B2B] rounded-xl border border-[#1E293B] shadow-2xl p-5 flex flex-col overflow-y-auto relative z-20 pointer-events-auto">
 
         <div className="flex bg-[#0B0F17] rounded-lg p-1 mb-5 border border-[#1E293B]">
           <button
