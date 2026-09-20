@@ -323,8 +323,53 @@ const DepthMapping = () => {
   };
 
   return (
-    <div className="flex w-full h-full p-4 gap-4 bg-[#0B0F17]">
-      <div className="flex-[4] h-full rounded-xl overflow-hidden shadow-2xl border border-[#1E293B] relative bg-[#0F172A] flex flex-col items-center justify-center">
+    <div className="relative flex w-full h-full p-4 gap-4 bg-[#0B0F17] overflow-hidden">
+      
+      {/* 2. Map Container absolutely positioned behind all UI elements */}
+      <MapContainer
+        center={[20.5937, 78.9629]}
+        zoom={5}
+        minZoom={3}
+        maxZoom={22}
+        zoomControl={false}
+        maxBounds={[[-90, -180], [90, 180]]}
+        maxBoundsViscosity={1.0}
+        className="absolute inset-0 z-0 h-full w-full"
+      >
+        <ZoomControl position="bottomright" />
+        <MapFlyController targetLocation={flyTarget} targetZoom={flyZoom} />
+
+        <TileLayer
+          url={tileProviders[mapType].url}
+          attribution={tileProviders[mapType].attribution}
+          maxNativeZoom={18}
+          maxZoom={22}
+        />
+        {mapType === 'hybrid' && tileProviders.hybrid.labelsUrl && (
+          <TileLayer
+            url={tileProviders.hybrid.labelsUrl}
+            maxNativeZoom={18}
+            maxZoom={22}
+          />
+        )}
+
+        {searchPin && (
+          <Marker position={[searchPin.lat, searchPin.lng]} icon={searchMarkerIcon}>
+            <Popup><div className="text-xs font-mono"><div className="font-bold text-[#F59E0B]">SEARCH PIN</div><div className="text-white">{searchPin.name}</div></div></Popup>
+          </Marker>
+        )}
+
+        {microPoint1 && (
+          <Marker position={[microPoint1.lat, microPoint1.lng]} icon={pointMarkerIcon}>
+            <Popup><div className="text-xs font-mono font-bold text-[#0EA5E9]">Base of Building</div></Popup>
+          </Marker>
+        )}
+
+        <LocationPicker />
+      </MapContainer>
+
+      {/* 1. Main container holding the 3D graph (middle section) with transparent glassmorphism */}
+      <div className={`flex-[4] h-full rounded-xl overflow-hidden shadow-2xl border border-[#1E293B] relative bg-[#0B1120]/40 backdrop-blur-sm flex flex-col items-center justify-center z-10 ${activePicker ? 'pointer-events-none' : ''}`}>
 
         {state?.complaintId && (
           <div className="absolute top-4 right-4 z-[2000] bg-red-500/10 border border-red-500/50 text-red-500 px-4 py-2 rounded-full shadow-lg flex items-center gap-2 animate-pulse backdrop-blur-md">
@@ -438,9 +483,9 @@ const DepthMapping = () => {
           </div>
         )}
 
-        {/* INTERACTIVE MAP OVERLAY */}
+        {/* INTERACTIVE MAP OVERLAY CONTROLS */}
         {activePicker && (
-          <div className="relative w-full h-full rounded-xl overflow-hidden z-50">
+          <div className="absolute inset-0 w-full h-full rounded-xl overflow-hidden z-50 pointer-events-none">
             <div className="absolute top-4 left-4 right-4 z-[1000] flex justify-between pointer-events-none">
 
               <div className="pointer-events-auto relative flex flex-col items-start justify-start">
@@ -515,47 +560,6 @@ const DepthMapping = () => {
               {activePicker === 'shadowPoint2' && 'Click the TIP of the shadow'}
             </div>
 
-            <MapContainer
-              center={[20.5937, 78.9629]}
-              zoom={5}
-              minZoom={3}
-              maxZoom={22}
-              zoomControl={false}
-              maxBounds={[[-90, -180], [90, 180]]}
-              maxBoundsViscosity={1.0}
-              style={{ height: '100%', width: '100%' }}
-            >
-              <ZoomControl position="bottomright" />
-              <MapFlyController targetLocation={flyTarget} targetZoom={flyZoom} />
-
-              <TileLayer
-                url={tileProviders[mapType].url}
-                attribution={tileProviders[mapType].attribution}
-                maxNativeZoom={18}
-                maxZoom={22}
-              />
-              {mapType === 'hybrid' && tileProviders.hybrid.labelsUrl && (
-                <TileLayer
-                  url={tileProviders.hybrid.labelsUrl}
-                  maxNativeZoom={18}
-                  maxZoom={22}
-                />
-              )}
-
-              {searchPin && (
-                <Marker position={[searchPin.lat, searchPin.lng]} icon={searchMarkerIcon}>
-                  <Popup><div className="text-xs font-mono"><div className="font-bold text-[#F59E0B]">SEARCH PIN</div><div className="text-white">{searchPin.name}</div></div></Popup>
-                </Marker>
-              )}
-
-              {microPoint1 && (
-                <Marker position={[microPoint1.lat, microPoint1.lng]} icon={pointMarkerIcon}>
-                  <Popup><div className="text-xs font-mono font-bold text-[#0EA5E9]">Base of Building</div></Popup>
-                </Marker>
-              )}
-
-              <LocationPicker />
-            </MapContainer>
           </div>
         )}
       </div>
