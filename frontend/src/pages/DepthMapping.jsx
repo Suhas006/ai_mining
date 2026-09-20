@@ -380,8 +380,9 @@ const DepthMapping = () => {
     <div className="relative flex w-full h-full p-4 gap-4 bg-[#0B0F17] overflow-hidden">
       
       {/* 2. Map Container absolutely positioned behind all UI elements */}
-      <MapContainer
-        center={[20.5937, 78.9629]}
+      {results && (
+        <MapContainer
+          center={[20.5937, 78.9629]}
         zoom={5}
         minZoom={3}
         maxZoom={22}
@@ -422,10 +423,11 @@ const DepthMapping = () => {
         )}
 
         <LocationPicker />
-      </MapContainer>
+        </MapContainer>
+      )}
 
-      {/* 1. Main container holding the 3D graph (middle section) with transparent glassmorphism */}
-      <div className={`flex-[4] h-full rounded-xl overflow-hidden shadow-2xl border border-[#1E293B] relative bg-transparent flex flex-col items-center justify-center z-10 ${activePicker ? 'pointer-events-none' : ''}`}>
+      {/* 1. Main container holding the 3D graph (middle section) with dynamic background */}
+      <div className={`flex-[4] h-full rounded-xl overflow-hidden shadow-2xl border border-[#1E293B] relative flex flex-col items-center justify-center z-10 ${results ? 'bg-black/40 backdrop-blur-sm' : 'bg-[#0B1120]'} ${activePicker ? 'pointer-events-none' : ''}`}>
 
         {state?.complaintId && (
           <div className="absolute top-4 right-4 z-[2000] bg-red-500/10 border border-red-500/50 text-red-500 px-4 py-2 rounded-full shadow-lg flex items-center gap-2 animate-pulse backdrop-blur-md">
