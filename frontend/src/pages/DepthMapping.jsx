@@ -457,11 +457,11 @@ const DepthMapping = () => {
         )}
 
         {!activePicker && results && !loading && (
-          <div className="z-10 w-full h-full flex flex-col items-center justify-center relative animate-in zoom-in-95 duration-500 backdrop-blur-sm bg-black/40 rounded-xl p-8 pointer-events-auto">
+          <div className="z-10 w-full h-full flex flex-col items-center justify-center relative animate-in zoom-in-95 duration-500 bg-transparent rounded-xl p-8 pointer-events-auto">
             {results.mode === 'macro' && (
               !results.isDig ? (
                 <div className="flex flex-col items-center">
-                  <div className="bg-[#F59E0B]/10 border border-[#F59E0B]/50 px-6 py-3 rounded-xl backdrop-blur-md flex flex-col items-center shadow-[0_0_30px_rgba(245,158,11,0.2)]">
+                  <div className="bg-black/60 border border-[#F59E0B]/50 px-6 py-3 rounded-xl backdrop-blur-md flex flex-col items-center shadow-[0_0_30px_rgba(245,158,11,0.2)]">
                     <span className="text-[10px] uppercase tracking-widest text-[#F59E0B]">Target (Peak/Roof)</span>
                     <span className="font-mono font-bold text-2xl text-white">{results.targetElev}m</span>
                   </div>
@@ -471,14 +471,14 @@ const DepthMapping = () => {
                       <span className="font-mono font-bold text-[#F59E0B]">+{results.exactZAxis}m Delta</span>
                     </div>
                   </div>
-                  <div className="bg-[#10B981]/10 border border-[#10B981]/50 px-6 py-3 rounded-xl backdrop-blur-md flex flex-col items-center shadow-[0_0_30px_rgba(16,185,129,0.2)]">
+                  <div className="bg-black/60 border border-[#10B981]/50 px-6 py-3 rounded-xl backdrop-blur-md flex flex-col items-center shadow-[0_0_30px_rgba(16,185,129,0.2)]">
                     <span className="text-[10px] uppercase tracking-widest text-[#10B981]">Reference Ground</span>
                     <span className="font-mono font-bold text-2xl text-white">{results.baseElev}m</span>
                   </div>
                 </div>
               ) : (
                 <div className="flex flex-col items-center">
-                  <div className="bg-[#10B981]/10 border border-[#10B981]/50 px-6 py-3 rounded-xl backdrop-blur-md flex flex-col items-center shadow-[0_0_30px_rgba(16,185,129,0.2)]">
+                  <div className="bg-black/60 border border-[#10B981]/50 px-6 py-3 rounded-xl backdrop-blur-md flex flex-col items-center shadow-[0_0_30px_rgba(16,185,129,0.2)]">
                     <span className="text-[10px] uppercase tracking-widest text-[#10B981]">Reference Ground</span>
                     <span className="font-mono font-bold text-2xl text-white">{results.baseElev}m</span>
                   </div>
@@ -488,7 +488,7 @@ const DepthMapping = () => {
                       <span className="font-mono font-bold text-[#38BDF8]">- {results.exactZAxis}m Delta</span>
                     </div>
                   </div>
-                  <div className="bg-[#38BDF8]/10 border border-[#38BDF8]/50 px-6 py-3 rounded-xl backdrop-blur-md flex flex-col items-center shadow-[0_0_30px_rgba(56,189,248,0.2)]">
+                  <div className="bg-black/60 border border-[#38BDF8]/50 px-6 py-3 rounded-xl backdrop-blur-md flex flex-col items-center shadow-[0_0_30px_rgba(56,189,248,0.2)]">
                     <span className="text-[10px] uppercase tracking-widest text-[#38BDF8]">Target (Pit/Subsurface)</span>
                     <span className="font-mono font-bold text-2xl text-white">{results.targetElev}m</span>
                   </div>
@@ -500,7 +500,7 @@ const DepthMapping = () => {
               <div className="flex items-end justify-center w-full h-full max-h-[300px] mt-16 px-16 relative">
                 <div className="absolute top-0 left-10 flex flex-col items-center">
                   <Sun className="w-12 h-12 text-[#F59E0B] animate-[spin_10s_linear_infinite]" />
-                  <span className="text-[10px] text-[#F59E0B] mt-1 font-mono">{results.solarAng}° Solar Angle</span>
+                  <span className="text-[10px] text-[#F59E0B] mt-1 font-mono bg-black/60 px-2 py-1 rounded backdrop-blur-md border border-[#F59E0B]/30 drop-shadow-lg">{results.solarAng}° Solar Angle</span>
                 </div>
                 <div className="absolute top-10 left-16 w-48 h-px border-t border-dashed border-[#F59E0B]/50 transform rotate-[25deg] origin-top-left" />
                 <div className="flex flex-col items-center relative mr-[-2px]">
