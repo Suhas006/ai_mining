@@ -29,6 +29,16 @@ function MapFlyController({ targetLocation, targetZoom }) {
   return null;
 }
 
+function MapController({ groundLat, groundLng }) {
+  const map = useMap();
+  useEffect(() => {
+    if (groundLat && groundLng && !isNaN(groundLat) && !isNaN(groundLng)) {
+      map.flyTo([parseFloat(groundLat), parseFloat(groundLng)], 18, { animate: true, duration: 1.5 });
+    }
+  }, [groundLat, groundLng, map]);
+  return null;
+}
+
 // 🌟 LIVE ASTRONOMICAL SOLAR ALGORITHM (100% REAL) 🌟
 const calculateSolarAngle = (lat, lng) => {
   const date = new Date();
@@ -111,8 +121,12 @@ const DepthMapping = () => {
           const data = await res.json();
           if (data?.candidates?.length > 0) {
             handleSelectLocation(data.candidates[0]);
+          } else {
+            alert("Could not auto-locate complaint address. Please enter coordinates manually.");
           }
-        } catch (err) {}
+        } catch (err) {
+          alert("Could not auto-locate complaint address. Please enter coordinates manually.");
+        }
       };
       
       doAutoSearch();
@@ -362,6 +376,7 @@ const DepthMapping = () => {
       >
         <ZoomControl position="bottomright" />
         <MapFlyController targetLocation={flyTarget} targetZoom={flyZoom} />
+        <MapController groundLat={baseLat} groundLng={baseLng} />
 
         <TileLayer
           url={tileProviders[mapType].url}
