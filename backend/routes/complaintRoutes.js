@@ -11,6 +11,6 @@ router.get('/my-grievances', authMiddleware, checkRole('user'), getMyGrievances)
 
 // GET /api/complaints/pending - allows employee to fetch all pending complaints
 // Also allowing admin for robustness
-router.get('/pending', authMiddleware, checkRole('employee', 'emp', 'admin', 'Field Inspection Squad', 'District Mining Officer', 'Revenue Surveyor (ULPIN)'), getPendingComplaints);
+router.get('/pending', authMiddleware, getPendingComplaints);
 
 module.exports = router;

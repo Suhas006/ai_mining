@@ -35,6 +35,20 @@ exports.getMyGrievances = async (req, res) => {
 
 exports.getPendingComplaints = async (req, res) => {
   try {
+    const userRole = (req.user.role || '').toLowerCase();
+    
+    // Explicitly allow employees and admins, along with other relevant roles
+    const allowedRoles = [
+      'emp', 'employee', 'admin', 
+      'field inspection squad', 
+      'district mining officer', 
+      'revenue surveyor (ulpin)'
+    ];
+
+    if (!allowedRoles.includes(userRole)) {
+        return res.status(403).json({ error: "Access denied. Only field surveyors and admins can view the queue." });
+    }
+
     const complaints = await Complaint.find({ status: 'pending' }).sort({ createdAt: -1 }).populate('complainantId', 'fullName email');
     return res.status(200).json({ complaints });
   } catch (err) {

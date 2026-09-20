@@ -17,10 +17,19 @@ export default function EmployeeDashboard() {
   const fetchPendingComplaints = async () => {
     setLoading(true);
     try {
-      const res = await axios.get('https://ai-mining.onrender.com/api/complaints/pending', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setComplaints(res.data.complaints || []);
+      const rawUser = localStorage.getItem('user');
+      const parsedUser = rawUser ? JSON.parse(rawUser) : null;
+      const currentToken = localStorage.getItem('token') || parsedUser?.token || localStorage.getItem('jwt') || token;
+      
+      if (!currentToken) {
+        console.error("JWT Token is missing from local storage.");
+        setLoading(false);
+        return;
+      }
+      
+      const config = { headers: { Authorization: `Bearer ${currentToken}` } };
+      const { data } = await axios.get('https://ai-mining.onrender.com/api/complaints/pending', config);
+      setComplaints(data.complaints || []);
     } catch (err) {
       console.error('Failed to fetch pending complaints:', err);
     } finally {
