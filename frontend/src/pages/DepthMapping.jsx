@@ -376,6 +376,8 @@ const DepthMapping = () => {
     return `${baseULPIN}-Z${Math.round(zAxis)}`;
   };
 
+  const isIdle = !results && !activePicker && !mapTarget;
+
   return (
     <div className="relative flex w-full h-full p-4 gap-4 bg-[#0B0F17] overflow-hidden">
       
@@ -425,7 +427,7 @@ const DepthMapping = () => {
       </MapContainer>
 
       {/* 1. Main container holding the 3D graph (middle section) with dynamic background */}
-      <div className={`flex-[4] h-full rounded-xl overflow-hidden shadow-2xl border border-[#1E293B] relative bg-transparent flex flex-col items-center justify-center z-10 pointer-events-none`}>
+      <div className={`flex-[4] h-full rounded-xl overflow-hidden shadow-2xl border border-[#1E293B] relative flex flex-col items-center justify-center transition-all duration-500 ${isIdle ? 'bg-[#0B0F17] z-20 pointer-events-auto' : 'bg-transparent z-10 pointer-events-none'}`}>
 
         {state?.complaintId && (
           <div className="absolute top-4 right-4 z-[2000] bg-red-500/10 border border-red-500/50 text-red-500 px-4 py-2 rounded-full shadow-lg flex items-center gap-2 animate-pulse backdrop-blur-md pointer-events-auto">
@@ -444,7 +446,7 @@ const DepthMapping = () => {
           }}
         />
 
-        {!activePicker && !results && !loading && (
+        {isIdle && !loading && (
           <div className="z-10 text-center animate-pulse">
             <Cuboid className="w-20 h-20 text-[#1E293B] mx-auto mb-4" />
             <p className="text-[#475569] font-medium tracking-widest uppercase text-sm">
