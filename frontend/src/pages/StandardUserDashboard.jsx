@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { FileText, List, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import axios from 'axios';
 
 export default function StandardUserDashboard() {
   const { user, token } = useAuth();
@@ -36,13 +37,10 @@ export default function StandardUserDashboard() {
   const fetchGrievances = async () => {
     setLoadingGrievances(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/complaints/my-grievances`, {
+      const res = await axios.get('https://ai-mining.onrender.com/api/complaints/my-grievances', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (res.ok) {
-        const data = await res.json();
-        setMyGrievances(data.complaints || []);
-      }
+      setMyGrievances(res.data.complaints || []);
     } catch (err) {
       console.error('Failed to fetch grievances:', err);
     } finally {
@@ -70,17 +68,13 @@ export default function StandardUserDashboard() {
     e.preventDefault();
     setSubmitStatus({ loading: true, error: null, success: false });
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/complaints/create`, {
-        method: 'POST',
+      const res = await axios.post('https://ai-mining.onrender.com/api/complaints/create', formData, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(formData)
+        }
       });
       
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to submit complaint');
       
       setSubmitStatus({ loading: false, error: null, success: true });
       // Reset form
@@ -94,7 +88,7 @@ export default function StandardUserDashboard() {
       
       setTimeout(() => setSubmitStatus(prev => ({ ...prev, success: false })), 5000);
     } catch (err) {
-      setSubmitStatus({ loading: false, error: err.message, success: false });
+      setSubmitStatus({ loading: false, error: err.response?.data?.error || err.message, success: false });
     }
   };
 

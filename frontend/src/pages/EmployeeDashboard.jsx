@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Search, MapPin, Eye, Clock, User, Phone, Shield } from 'lucide-react';
+import axios from 'axios';
 
 export default function EmployeeDashboard() {
   const { token, user } = useAuth();
@@ -16,13 +17,10 @@ export default function EmployeeDashboard() {
   const fetchPendingComplaints = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/complaints/pending`, {
+      const res = await axios.get('https://ai-mining.onrender.com/api/complaints/pending', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (res.ok) {
-        const data = await res.json();
-        setComplaints(data.complaints || []);
-      }
+      setComplaints(res.data.complaints || []);
     } catch (err) {
       console.error('Failed to fetch pending complaints:', err);
     } finally {
