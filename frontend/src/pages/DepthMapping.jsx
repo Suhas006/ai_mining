@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, useMapEvents, useMap, ZoomControl, Marker, Popup } from 'react-leaflet';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Cuboid, ArrowDownToLine, ArrowUpToLine, MapPin, Activity, Map as MapIcon, Search, Layers, Globe, Sun, Building, Mountain, Navigation, AlertCircle } from 'lucide-react';
@@ -60,6 +60,7 @@ const DepthMapping = () => {
   const { incrementUlpins, addAuditLog } = useLiveData();
   const { user } = useAuth();
   const { state } = useLocation();
+  const navigate = useNavigate();
   
   const [surveyMode, setSurveyMode] = useState('macro');
 
@@ -311,6 +312,29 @@ const DepthMapping = () => {
     setLoading(false);
   };
 
+  const handleResolve = async () => {
+    if (!state?.complaintId) return;
+    try {
+      const token = user?.token || localStorage.getItem('depthfence_token');
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/complaints/${state.complaintId}/resolve`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (res.ok) {
+        alert('Complaint resolved successfully!');
+        navigate('/surveyor-queue');
+      } else {
+        alert('Failed to resolve complaint.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error resolving complaint.');
+    }
+  };
+
   // 🌟 SIH26011: STRICT 3D ULPIN GENERATOR (NO FALLBACKS) 🌟
   const generate3DULPIN = (lat, lng, zAxis) => {
     if (!lat || !lng) return "ERR: MISSING-GPS-TELEMETRY";
@@ -369,7 +393,7 @@ const DepthMapping = () => {
       </MapContainer>
 
       {/* 1. Main container holding the 3D graph (middle section) with transparent glassmorphism */}
-      <div className={`flex-[4] h-full rounded-xl overflow-hidden shadow-2xl border border-[#1E293B] relative bg-[#0B1120]/40 backdrop-blur-sm flex flex-col items-center justify-center z-10 ${activePicker ? 'pointer-events-none' : ''}`}>
+      <div className={`flex-[4] h-full rounded-xl overflow-hidden shadow-2xl border border-[#1E293B] relative bg-transparent flex flex-col items-center justify-center z-10 ${activePicker ? 'pointer-events-none' : ''}`}>
 
         {state?.complaintId && (
           <div className="absolute top-4 right-4 z-[2000] bg-red-500/10 border border-red-500/50 text-red-500 px-4 py-2 rounded-full shadow-lg flex items-center gap-2 animate-pulse backdrop-blur-md">
@@ -407,7 +431,7 @@ const DepthMapping = () => {
         )}
 
         {!activePicker && results && !loading && (
-          <div className="z-10 w-full h-full flex flex-col items-center justify-center relative animate-in zoom-in-95 duration-500">
+          <div className="z-10 w-full h-full flex flex-col items-center justify-center relative animate-in zoom-in-95 duration-500 backdrop-blur-sm bg-black/40 rounded-xl p-8">
             {results.mode === 'macro' && (
               !results.isDig ? (
                 <div className="flex flex-col items-center">
@@ -730,6 +754,11 @@ const DepthMapping = () => {
                 }
               </span>
             </div>
+            {state?.complaintId && (
+              <button onClick={handleResolve} className="w-full mt-4 bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded shadow-lg transition-all">
+                ✓ Verify & Resolve Complaint
+              </button>
+            )}
           </div>
         )}
       </div>

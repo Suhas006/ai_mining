@@ -56,3 +56,14 @@ exports.getPendingComplaints = async (req, res) => {
     return res.status(500).json({ error: 'Server error while fetching pending complaints' });
   }
 };
+
+exports.resolveComplaint = async (req, res) => {
+  try {
+    const complaint = await Complaint.findByIdAndUpdate(req.params.id, { status: 'resolved' }, { new: true });
+    if (!complaint) return res.status(404).json({ error: 'Complaint not found' });
+    res.status(200).json({ message: 'Complaint resolved successfully', complaint });
+  } catch (error) {
+    console.error('Error resolving complaint:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
