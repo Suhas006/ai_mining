@@ -64,6 +64,9 @@ app.get('/api/auth/me', authMiddleware, getMe);
 const userRoutes = require('./routes/user');
 app.use('/api/users', userRoutes);
 
+const complaintRoutes = require('./routes/complaintRoutes');
+app.use('/api/complaints', complaintRoutes);
+
 // Admin Routes
 const adminMiddleware = (req, res, next) => {
   if (req.user && req.user.role === 'admin') {

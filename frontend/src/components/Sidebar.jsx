@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Map, Settings, User, Menu, X, Home, LogIn, LogOut, ShieldAlert } from 'lucide-react';
+import { Map, Settings, User, Menu, X, Home, LogIn, LogOut, ShieldAlert, FileText, ClipboardList } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Sidebar = () => {
@@ -95,6 +95,38 @@ const Sidebar = () => {
             <Home className="w-5 h-5 text-[#0EA5E9]" />
             Dashboard Home
           </NavLink>
+
+          {user && user.role === 'user' && (
+            <NavLink
+              to="/citizen-dashboard"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm font-medium ${
+                  isActive
+                    ? 'bg-[#10B981]/10 text-slate-900 dark:text-white border border-[#10B981]/30 shadow-[inset_0_0_10px_rgba(16,185,129,0.1)]'
+                    : 'hover:bg-slate-200 dark:hover:bg-[#1E293B] hover:text-slate-900 dark:hover:text-white border border-transparent'
+                }`
+              }
+            >
+              <FileText className="w-5 h-5 text-[#10B981]" />
+              Citizen Grievances
+            </NavLink>
+          )}
+
+          {user && ['employee', 'emp', 'admin', 'Field Inspection Squad', 'District Mining Officer', 'Revenue Surveyor (ULPIN)'].includes(user.role) && (
+            <NavLink
+              to="/surveyor-queue"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm font-medium ${
+                  isActive
+                    ? 'bg-[#F59E0B]/10 text-slate-900 dark:text-white border border-[#F59E0B]/30 shadow-[inset_0_0_10px_rgba(245,158,11,0.1)]'
+                    : 'hover:bg-slate-200 dark:hover:bg-[#1E293B] hover:text-slate-900 dark:hover:text-white border border-transparent'
+                }`
+              }
+            >
+              <ClipboardList className="w-5 h-5 text-[#F59E0B]" />
+              Surveyor Queue
+            </NavLink>
+          )}
 
           <NavLink
             to="/settings"

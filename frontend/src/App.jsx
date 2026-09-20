@@ -18,6 +18,8 @@ import Settings from './pages/Settings';
 import MyProfile from './pages/MyProfile';
 import AdminPanel from './pages/AdminPanel';
 import EmployeeDirectory from './pages/EmployeeDirectory';
+import StandardUserDashboard from './pages/StandardUserDashboard';
+import EmployeeDashboard from './pages/EmployeeDashboard';
 
 import ThreeDPitViewer from './components/ThreeDPitViewer';
 import ParcelRegisterModal from './components/ParcelRegisterModal';
@@ -96,6 +98,10 @@ export default function App() {
               <Route path="/profile" element={<ProtectedRoute><MyProfile /></ProtectedRoute>} />
               <Route path="/admin-panel" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
               <Route path="/admin/employees" element={<ProtectedRoute><EmployeeDirectory /></ProtectedRoute>} />
+              
+              <Route path="/citizen-dashboard" element={<ProtectedRoute><StandardUserDashboard /></ProtectedRoute>} />
+              <Route path="/surveyor-queue" element={<ProtectedRoute><EmployeeDashboard /></ProtectedRoute>} />
+              <Route path="/z-axis-analyzer" element={<ProtectedRoute><DepthMapping /></ProtectedRoute>} />
               
               <Route
                 path="/2d-scanner"
