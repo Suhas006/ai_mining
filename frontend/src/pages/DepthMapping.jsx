@@ -118,7 +118,8 @@ const DepthMapping = () => {
             }
           }
           
-          const res = await fetch(`https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?singleLine=${encodeURIComponent(query)}&f=json&maxLocations=1`);
+          const searchQuery = `${query}, India`;
+          const res = await fetch(`https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?singleLine=${encodeURIComponent(searchQuery)}&countryCode=IN&f=json&maxLocations=1`);
           const data = await res.json();
           if (data?.candidates?.length > 0) {
             handleSelectLocation(data.candidates[0]);
@@ -166,7 +167,8 @@ const DepthMapping = () => {
     }
 
     try {
-      const res = await fetch(`https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?singleLine=${encodeURIComponent(query)}&f=json&maxLocations=5`);
+      const searchQuery = `${query}, India`;
+      const res = await fetch(`https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?singleLine=${encodeURIComponent(searchQuery)}&countryCode=IN&f=json&maxLocations=5`);
       const data = await res.json();
       if (data && data.candidates && data.candidates.length > 0) {
         setSearchResults(data.candidates);
