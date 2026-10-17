@@ -110,7 +110,7 @@ EOF
                                 docker run --rm -v "$WORKSPACE:/repo:ro" -v "$T/gl.toml:/gl.toml:ro" \
                                   -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0=/repo \
                                   zricethezav/gitleaks:v8.18.4 detect --source /repo --config /gl.toml \
-                                  --redact --no-banner --exit-code 1
+                                  --redact --verbose --no-banner --exit-code 1
                             '''
                         }
                     }
